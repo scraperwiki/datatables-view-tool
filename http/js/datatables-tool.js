@@ -63,7 +63,11 @@ $(function(){
 						rows.push(row)
 					}
 					console.log(rows)
-					return fnCallback({ "aaData" : rows })
+					return fnCallback({ 
+						"aaData" : rows,
+						"iTotalRecords": 999, // without filtering
+						"iTotalDisplayRecords": 999 // after filtering
+					})
 				}
 			} );
 		}
