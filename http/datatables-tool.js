@@ -72,7 +72,7 @@ function getTableColumnNames(table_name, callback){
 	})
 }
 
-// Make on of the data tables
+// Make one of the DataTables (in one tab)
 var constructDataTable = function(table_name) {
 	getTableColumnNames(table_name, function(column_names) {
 		console.log("Columns", column_names)
@@ -99,7 +99,7 @@ var constructDataTable = function(table_name) {
 	})
 }
 
-// Make the data tables grids
+// Make all the DataTables (each tab)
 var constructDataTables = function() {
 	// XXX todo, make one for each tab
 	var tableName = tables[0]
