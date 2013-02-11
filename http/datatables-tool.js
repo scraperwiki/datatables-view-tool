@@ -14,7 +14,7 @@ var showAlert = function(title, message, level) {
 };
 
 var escapeSQL = function(column_name) {
-	return "`" + column_name + "`"
+	return "\"" + column_name + "\""
 }
 
 // Function to map JSON data between DataTables format and ScraperWiki's SQL endpoint format.
@@ -100,7 +100,7 @@ var convertData = function(table_name, column_names) {
 
 // Find the column names
 function getTableColumnNames(table_name, callback){
-    scraperwiki.sql("select * from `" + table_name + "` limit 1", function(data) {
+    scraperwiki.sql("select * from \"" + table_name + "\" limit 1", function(data) {
 		callback(_.keys(data[0]))
 	}, function(jqXHR, textStatus, errorThrown) {
 		showAlert(errorThrown, jqXHR.responseText, "error")
@@ -130,6 +130,8 @@ var constructDataTable = function(table_name) {
 			"bServerSide": true,
 			"bPaginate": true,
 			"bFilter": true,
+			"iDisplayLength": 100,
+			"aLengthMenu": [10, 100, 1000],
 			"fnServerData": convertData(table_name, column_names)
 		} );
 	})
