@@ -17,7 +17,7 @@ var escapeSQL = function(column_name) {
 
 // Function to map JSON data between DataTables format and ScraperWiki's SQL endpoint format.
 // It returns a function for the fnServerData parameter
-var convertData = function(tableName, column_names) {
+var convertData = function(table_name, column_names) {
 	// This is a wrapper round the GET request DataTables makes to get more data
 	// sSource - the URL, we don't use it, we hard code it instead
 	// aoData - contains the URL parameters, e.g. what page, what to filter, what order and so on
@@ -29,19 +29,33 @@ var convertData = function(tableName, column_names) {
 		for (var i=0;i<aoData.length;i++) { 
 			params[aoData[i].name] = aoData[i].value
 		}
-
 		console.log(params)
 
-		// construct set of GET parameters to send to ScraperWiki SQL endpoint
-		var data = {}
+		// construct SQL query needed according to the parameters
 		var columns  = _.map(column_names, escapeSQL).join(",")
-		data.q = "select " + columns + " from " + escapeSQL(tableName) + " limit " + params.iDisplayLength + " offset " + params.iDisplayStart
+		var order_by = ""
+		if (params.iSortingCols == 1) {
+			order_by = " order by " + escapeSQL(column_names[params.iSortCol_0])
+			if (params.sSortDir_0 == 'desc') {
+				order_by += " desc"
+			} else if (params.sSortDir_0 != 'asc') {
+				showAlert("Got unknown sSortDir_0 value in table " + table_name)
+			}
+		} else {
+			showAlert("Got iSortingCols != 1 in table " + table_name)
+		} 
+		var query = "select " + columns + 
+			     " from " + escapeSQL(table_name) + 
+				 order_by + 
+			     " limit " + params.iDisplayLength + 
+			     " offset " + params.iDisplayStart 
+		console.log("SQL query", query)
 
 		oSettings.jqXHR = $.ajax( {
 			"dataType": 'json',
 			"type": "GET",
 			"url": sqliteEndpoint,
-			"data": data,
+			"data": { q: query },
 			"success": function ( response ) {
 				// ScraperWiki returns a list of dicts. This converts it to a list of lists.
 				var rows = []
@@ -58,6 +72,9 @@ var convertData = function(tableName, column_names) {
 					"iTotalRecords": 999, // without filtering
 					"iTotalDisplayRecords": 999 // after filtering
 				})
+			}, 
+			"error": function(jqXHR, textStatus, errorThrown) {
+				showAlert(errorThrown, jqXHR.responseText, "error")
 			}
 		} );
 	}
@@ -102,8 +119,8 @@ var constructDataTable = function(table_name) {
 // Make all the DataTables (each tab)
 var constructDataTables = function() {
 	// XXX todo, make one for each tab
-	var tableName = tables[0]
-	constructDataTable(tableName)
+	var table_name = tables[0]
+	constructDataTable(table_name)
 }
 
 // Main entry point, make the data table
