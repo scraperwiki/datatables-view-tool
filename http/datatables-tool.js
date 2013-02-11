@@ -137,7 +137,8 @@ var constructDataTable = function(table_name) {
 			"bFilter": true,
 			"iDisplayLength": 100,
             "bScrollCollapse": true,
-            "sDom": '<"H"<"#schema_'+table_name+'">lfr>t<"F"ip>',
+//            "sDom": '<"H"<"#schema_'+table_name+'">lfr>t<"F"ip>',
+            "sDom": '<"H"fip>rt<"F"pil>',
 			"aLengthMenu": [10, 100, 1000],
 			"fnServerData": convertData(table_name, column_names),
             "fnRowCallback": function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
