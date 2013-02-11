@@ -67,7 +67,6 @@ var convertData = function(table_name, column_names) {
 		// get column counts
 		scraperwiki.sql("select (select count(*) from " + table_name + ") as total, (select count(*) from " + table_name + where + ") as display_total", function (data) {
 			var counts = data[0]
-			console.log("counts", data)
 
 			oSettings.jqXHR = $.ajax( {
 				"dataType": 'json',
@@ -111,7 +110,23 @@ function getTableColumnNames(table_name, callback){
 }
 
 // Make one of the DataTables (in one tab)
-var constructDataTable = function(table_name) {
+var constructDataTable = function(i, table_name) {
+	// Find or make the table
+	$(".maintable").hide()
+	var id = "table_" + i
+	var $outer = $("#" + id)
+	if ($outer.length == 0) {
+		console.log("making a new table: ", table_name)
+		$outer = $('<div class="maintable" id="table_' + i + '"> <table class="display"></table> </div>')
+		$('body').append($outer)
+	} else {
+		$outer.show()
+		console.log("reusing cached table: ", table_name)
+		return
+	}
+	var $t = $outer.find("table")
+
+	// Find out the column names
 	getTableColumnNames(table_name, function(column_names) {
 		console.log("Columns", column_names)
 		if (column_names.length == 0) {
@@ -119,8 +134,7 @@ var constructDataTable = function(table_name) {
 			return
 		}
 
-		var $t = $('#maintable')
-		$t.empty()
+		// Make the column headings
         var thead = '<thead><tr>'
 		_.each(column_names, function(column_name) {
 			thead += '<th>' + column_name + '</th>'
@@ -128,7 +142,8 @@ var constructDataTable = function(table_name) {
 		thead += '</tr></thead>'
 		$t.append(thead)
 
-		$('#maintable').dataTable( {
+		// Fill in the datatables object
+		$t.dataTable( {
 			"bProcessing": true,
 			"bServerSide": true,
 			"bDeferRender": true,
@@ -159,9 +174,19 @@ var constructDataTable = function(table_name) {
 
 // Make all the DataTables (each tab)
 var constructDataTables = function() {
-	// XXX todo, make one for each tab
-	var table_name = tables[0]
-	constructDataTable(table_name)
+	var first_table_name = tables[0]
+
+	var $ul = $('<ul>').addClass('nav nav-tabs');
+	$.each(tables, function(i, table_name){
+		$('<li' + ( table_name == first_table_name ? ' class="active"' : '' ) + '>').append('<a href="#">' + table_name + '</a>').bind('click', function(e){
+			e.preventDefault();
+			$(this).addClass('active').siblings('.active').removeClass('active');
+			constructDataTable(i, table_name)
+		}).appendTo($ul);
+	});
+	$ul.appendTo('body');
+
+	constructDataTable(0, first_table_name)
 }
 
 // Main entry point, make the data table
