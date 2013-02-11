@@ -1,3 +1,5 @@
+// datatables-tool.js
+
 // When there are errors call this
 var showAlert = function(title, message, level) {
 	var $div;
@@ -44,39 +46,55 @@ var convertData = function(table_name, column_names) {
 		} else {
 			showAlert("Got iSortingCols != 1 in table " + table_name)
 		} 
+		var where = ""
+		if (params.sSearch) {
+			// XXX no idea if this bog standard Javascript escape really does what we want with SQL databases.
+			// There's no security risk (as endpoint is sandboxed). There could be user experience pain though.
+			var search = "'%" + escape(params.sSearch.toLowerCase()) + "%'"
+			where = " where " + _.map(column_names, function(n) { return "lower(" + escapeSQL(n) + ") like " + search }).join(" or ")
+		}
 		var query = "select " + columns + 
 			     " from " + escapeSQL(table_name) + 
+				 where + 
 				 order_by + 
 			     " limit " + params.iDisplayLength + 
 			     " offset " + params.iDisplayStart 
-		console.log("SQL query", query)
+		console.log("SQL query: ", query)
 
-		oSettings.jqXHR = $.ajax( {
-			"dataType": 'json',
-			"type": "GET",
-			"url": sqliteEndpoint,
-			"data": { q: query },
-			"success": function ( response ) {
-				// ScraperWiki returns a list of dicts. This converts it to a list of lists.
-				var rows = []
-				for (var i=0;i<response.length;i++) { 
-					var row = []
-					for (k in response[i]) {
-						row.push(response[i][k])
+		// get column counts
+		scraperwiki.sql("select (select count(*) from " + table_name + ") as total, (select count(*) from " + table_name + where + ") as display_total", function (data) {
+			var counts = data[0]
+			console.log("counts", data)
+
+			oSettings.jqXHR = $.ajax( {
+				"dataType": 'json',
+				"type": "GET",
+				"url": sqliteEndpoint,
+				"data": { q: query },
+				"success": function ( response ) {
+					// ScraperWiki returns a list of dicts. This converts it to a list of lists.
+					var rows = []
+					for (var i=0;i<response.length;i++) { 
+						var row = []
+						for (k in response[i]) {
+							row.push(response[i][k])
+						}
+						rows.push(row)
 					}
-					rows.push(row)
+					// Send the data to dataTables
+					fnCallback({ 
+						"aaData" : rows,
+						"iTotalRecords": data[0].total, // without filtering
+						"iTotalDisplayRecords": data[0].display_total // after filtering
+					})
+				}, 
+				"error": function(jqXHR, textStatus, errorThrown) {
+					showAlert(errorThrown, jqXHR.responseText, "error")
 				}
-				// Send the data to dataTables
-				fnCallback({ 
-					"aaData" : rows,
-					"iTotalRecords": 999, // without filtering
-					"iTotalDisplayRecords": 999 // after filtering
-				})
-			}, 
-			"error": function(jqXHR, textStatus, errorThrown) {
-				showAlert(errorThrown, jqXHR.responseText, "error")
-			}
-		} );
+			} );
+		}, function(jqXHR, textStatus, errorThrown) {
+			showAlert(errorThrown, jqXHR.responseText, "error")
+		})
 	}
 }
 
@@ -111,6 +129,7 @@ var constructDataTable = function(table_name) {
 			"bProcessing": true,
 			"bServerSide": true,
 			"bPaginate": true,
+			"bFilter": true,
 			"fnServerData": convertData(table_name, column_names)
 		} );
 	})
