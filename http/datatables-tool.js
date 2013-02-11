@@ -36,15 +36,18 @@ var convertData = function(table_name, column_names) {
 		// construct SQL query needed according to the parameters
 		var columns  = _.map(column_names, escapeSQL).join(",")
 		var order_by = ""
-		if (params.iSortingCols == 1) {
-			order_by = " order by " + escapeSQL(column_names[params.iSortCol_0])
-			if (params.sSortDir_0 == 'desc') {
-				order_by += " desc"
-			} else if (params.sSortDir_0 != 'asc') {
-				showAlert("Got unknown sSortDir_0 value in table " + table_name)
+		if (params.iSortingCols >= 1) {
+			var order_parts = []
+			for (var i = 0; i < params.iSortingCols; i++) { 
+				order_part = escapeSQL(column_names[params["iSortCol_" + i]])
+				if (params["sSortDir_" + i] == 'desc') {
+					order_part += " desc"
+				} else if (params["sSortDir_" + i] != 'asc') {
+					showAlert("Got unknown sSortDir_" + i + " value in table " + table_name)
+				}
+				order_parts.push(order_part)
 			}
-		} else {
-			showAlert("Got iSortingCols != 1 in table " + table_name)
+			order_by = " order by " + order_parts.join(",")
 		} 
 		var where = ""
 		if (params.sSearch) {
@@ -128,11 +131,28 @@ var constructDataTable = function(table_name) {
 		$('#maintable').dataTable( {
 			"bProcessing": true,
 			"bServerSide": true,
+			"bDeferRender": true,
+			"bJQueryUI": true,
 			"bPaginate": true,
+            "sPaginationType": "full_numbers",
 			"bFilter": true,
 			"iDisplayLength": 100,
+            "bScrollCollapse": true,
+            "sDom": '<"H"<"#schema_'+table_name+'">lfr>t<"F"ip>',
 			"aLengthMenu": [10, 100, 1000],
-			"fnServerData": convertData(table_name, column_names)
+			"fnServerData": convertData(table_name, column_names),
+            "fnRowCallback": function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
+                $('td', tr).each(function(){
+                    $(this).html(
+                        $(this).html().replace(
+                            /((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)/g,
+                            '<a href="$1">$1</a>'
+                        )
+                    );
+                });
+                return tr;
+            }
+
 		} );
 	})
 }
