@@ -31,7 +31,7 @@ var convertData = function(table_name, column_names) {
 		for (var i=0;i<aoData.length;i++) { 
 			params[aoData[i].name] = aoData[i].value
 		}
-		console.log(params)
+		console.log("DataTables params:", params)
 
 		// construct SQL query needed according to the parameters
 		var columns  = _.map(column_names, escapeSQL).join(",")
@@ -62,7 +62,7 @@ var convertData = function(table_name, column_names) {
 				 order_by + 
 			     " limit " + params.iDisplayLength + 
 			     " offset " + params.iDisplayStart 
-		console.log("SQL query: ", query)
+		console.log("SQL query:", query)
 
 		// get column counts
 		scraperwiki.sql("select (select count(*) from " + table_name + ") as total, (select count(*) from " + table_name + where + ") as display_total", function (data) {
@@ -116,12 +116,12 @@ var constructDataTable = function(i, table_name) {
 	var id = "table_" + i
 	var $outer = $("#" + id)
 	if ($outer.length == 0) {
-		console.log("making a new table: ", table_name)
+		console.log("making a new table:", table_name)
 		$outer = $('<div class="maintable" id="table_' + i + '"> <table class="display"></table> </div>')
 		$('body').append($outer)
 	} else {
 		$outer.show()
-		console.log("reusing cached table: ", table_name)
+		console.log("reusing cached table:", table_name)
 		return
 	}
 	var $t = $outer.find("table")
