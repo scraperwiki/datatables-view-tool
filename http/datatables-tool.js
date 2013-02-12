@@ -137,7 +137,7 @@ var constructDataTable = function(i, table_name) {
 			"bPaginate": true,
 			"sPaginationType": "full_numbers",
 			"bFilter": true,
-			"iDisplayLength": 1000,
+			"iDisplayLength": 500,
       "bScrollCollapse": true,
       "sDom": '<"H"fip>rt<"F"pi>',
 			"fnServerData": convertData(table_name, column_names),
