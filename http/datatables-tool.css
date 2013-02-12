@@ -6,6 +6,16 @@ html, body {
 
 .maintable {
     background-color: #fff;
+	padding-top: 40px;
+}
+
+.dataTables_filter {
+}
+
+.dataTables_info {
+}
+
+.dataTables_paginate {
 }
 
 ul.nav-tabs {

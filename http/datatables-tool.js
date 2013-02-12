@@ -117,7 +117,7 @@ var constructDataTable = function(i, table_name) {
 	var $outer = $("#" + id)
 	if ($outer.length == 0) {
 		console.log("making a new table:", table_name)
-		$outer = $('<div class="maintable" id="table_' + i + '"> <table class="display"></table> </div>')
+		$outer = $('<div class="maintable" id="table_' + i + '"> <table class="innertable display"></table> </div>')
 		$('body').append($outer)
 	} else {
 		$outer.show()
