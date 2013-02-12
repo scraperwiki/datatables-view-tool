@@ -140,7 +140,7 @@ var constructDataTable = function(i, table_name) {
       "bFilter": true,
       "iDisplayLength": 500,
       "bScrollCollapse": true,
-      "sDom": 'pfirt',
+      "sDom": '<"table_controls"pfi>r<"table_wrapper"t>',
       "sPaginationType": "bootstrap",
       "fnServerData": convertData(table_name, column_names),
       "fnRowCallback": function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
@@ -153,6 +153,11 @@ var constructDataTable = function(i, table_name) {
               )
           })
           return tr
+      },
+      "fnInitComplete": function(){
+        // Really hackily replace their rubbish search input with a nicer one
+        var $copy = $('.dataTables_filter label input').clone(true).addClass('search-query')
+        $('.dataTables_filter').empty().append($copy)
       }
     })
   })

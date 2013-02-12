@@ -4,21 +4,72 @@ html, body {
   height: 100%;
 }
 
+.table_controls {
+  position: absolute;
+  z-index: 100;
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0 7px;
+  height: 40px;
+  border-bottom: 1px solid #ddd;
+  overflow: auto;
+}
+
+.maintable {
+  position: absolute;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 37px;
+}
+
+.table_wrapper {
+  position: absolute;
+  z-index: 10;
+  top: 40px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
+}
+
+.table-bordered td, .table-bordered th {
+  -webkit-border-radius: 0 !important;
+  border-radius: 0 !important;
+  -moz-border-radius: 0 !important;
+}
+
+.table-bordered {
+  -webkit-border-radius: 0 !important;
+  border-radius: 0 !important;
+  -moz-border-radius: 0 !important;
+  margin: 0;
+}
+
 .dataTables_filter {
   float: right;
+  margin-top: 5px;
 }
 
 .dataTables_info {
   text-align: center;
+  line-height: 40px;
 }
 
 .dataTables_paginate {
   float: left;
-  margin: 0;
+  margin: 7px 0 0 0;
+}
+
+.dataTables_filter label {
+  display: none;
 }
 
 .tabs-below {
-  position: fixed;
+  position: absolute;
+  z-index: 100;
   bottom: 0;
   left: 0;
   right: 0;
@@ -28,4 +79,8 @@ html, body {
 .tabs-below .nav-tabs {
   margin: 0;
   padding: 0 0 5px 5px;
+}
+
+.tabs-below .nav-tabs > li > a {
+  padding: 5px 10px;
 }
