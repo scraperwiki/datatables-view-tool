@@ -65,7 +65,7 @@ var convertData = function(table_name, column_names) {
 		console.log("SQL query:", query)
 
 		// get column counts
-		scraperwiki.sql("select (select count(*) from \"" + table_name + "\") as total, (select count(*) from " + table_name + where + ") as display_total", function (data) {
+		scraperwiki.sql("select (select count(*) from " + escapeSQL(table_name) + ") as total, (select count(*) from " + escapeSQL(table_name) + where + ") as display_total", function (data) {
 			var counts = data[0]
 
 			oSettings.jqXHR = $.ajax( {
@@ -102,7 +102,7 @@ var convertData = function(table_name, column_names) {
 
 // Find the column names
 function getTableColumnNames(table_name, callback){
-    scraperwiki.sql("select * from \"" + table_name + "\" limit 1", function(data) {
+    scraperwiki.sql("select * from " + escapeSQL(table_name) + " limit 1", function(data) {
 		callback(_.keys(data[0]))
 	}, function(jqXHR, textStatus, errorThrown) {
 		showAlert(errorThrown, jqXHR.responseText, "error")
@@ -197,7 +197,7 @@ $(function(){
 	settings = scraperwiki.readSettings()
 	sqliteEndpoint = settings.target.url + '/sqlite'
 
-	scraperwiki.sql("select name from \"sqlite_master\" where type = 'table'", function(data, textStatus, jqXHR) {
+	scraperwiki.sql("select name from " + escapeSQL('sqlite_master') + " where type = 'table'", function(data, textStatus, jqXHR) {
 		tables = []
 		$.each(data, function (i) {
 			tables.push(data[i].name)
