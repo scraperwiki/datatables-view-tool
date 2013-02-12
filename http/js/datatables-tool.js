@@ -143,17 +143,7 @@ var constructDataTable = function(i, table_name) {
       "sDom": '<"table_controls"pfi>r<"table_wrapper"t>',
       "sPaginationType": "bootstrap",
       "fnServerData": convertData(table_name, column_names),
-      "fnRowCallback": function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
-          $('td', tr).each(function(){
-              $(this).html(
-                  $(this).html().replace(
-                      /((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)/g,
-                      '<a href="$1" target="_blank">$1</a>'
-                  )
-              )
-          })
-          return tr
-      },
+      "fnRowCallback": prettifyRow,
       "fnInitComplete": function(){
         // Really hackily replace their rubbish search input with a nicer one
         var $copy = $('.dataTables_filter label input').clone(true).addClass('search-query')
@@ -187,6 +177,19 @@ var constructDataTables = function() {
   var first_table_name = tables[0]
   constructTabs(tables, first_table_name)
   constructDataTable(0, first_table_name)
+}
+
+// Links clickable etc. in one row of data
+var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
+  $('td', tr).each(function(){
+      $(this).html(
+          $(this).html().replace(
+              /((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)/g,
+              '<a href="$1" target="_blank">$1</a>'
+          )
+      )
+  })
+  return tr
 }
 
 // Main entry point, make the data table
