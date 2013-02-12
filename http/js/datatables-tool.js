@@ -87,7 +87,7 @@ var convertData = function(table_name, column_names) {
   }
 }
 
-// Find the column names
+// Find the column names for a given table
 function getTableColumnNames(table_name, callback){
     scraperwiki.sql("select * from " + escapeSQL(table_name) + " limit 1", function(data) {
     callback(_.keys(data[0]))
@@ -97,6 +97,8 @@ function getTableColumnNames(table_name, callback){
 }
 
 // Make one of the DataTables (in one tab)
+// 'i' should be the integer position of the datatable in the list of all tables
+// 'table_name' is obviously the name of the active table
 var constructDataTable = function(i, table_name) {
   // Find or make the table
   $(".maintable").hide()
@@ -156,20 +158,29 @@ var constructDataTable = function(i, table_name) {
   })
 }
 
-// Make all the DataTables (each tab)
+// Create and insert spreadsheet-like tab bar at bottom of page.
+// 'tables' should be a list of table names.
+// 'active_table' should be the one you want to appear selected.
+var constructTabs = function(tables, active_table){
+  var $tabs = $('<div>').addClass('tabs-below').appendTo('body')
+  var $ul = $('<ul>').addClass('nav nav-tabs').appendTo($tabs)
+  $.each(tables, function(i, table_name){
+    var li = '<li>'
+    if(table_name == active_table){
+      var li = '<li class="active">'
+    }
+    $(li).append('<a href="#">' + table_name + '</a>').bind('click', function(e){
+      e.preventDefault()
+      $(this).addClass('active').siblings('.active').removeClass('active')
+      constructDataTable(i, table_name)
+    }).appendTo($ul)
+  })
+}
+
+// Make all the DataTables and their tabs
 var constructDataTables = function() {
   var first_table_name = tables[0]
-
-  var $ul = $('<ul>').addClass('nav nav-tabs');
-  $.each(tables, function(i, table_name){
-    $('<li' + ( table_name == first_table_name ? ' class="active"' : '' ) + '>').append('<a href="#">' + table_name + '</a>').bind('click', function(e){
-      e.preventDefault();
-      $(this).addClass('active').siblings('.active').removeClass('active');
-      constructDataTable(i, table_name)
-    }).appendTo($ul);
-  });
-  $ul.appendTo('body');
-
+  constructTabs(tables, first_table_name)
   constructDataTable(0, first_table_name)
 }
 
