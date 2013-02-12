@@ -26,8 +26,8 @@ table.table thead .sorting_desc:before {
   background-position: center center;
 }
 
-table.table thead .sorting_asc:before { background-image: url('img/sort_asc.png'); }
-table.table thead .sorting_desc:before { background-image: url('img/sort_desc.png'); }
+table.table thead .sorting_asc:before { background-image: url('../img/sort_asc.png'); }
+table.table thead .sorting_desc:before { background-image: url('../img/sort_desc.png'); }
 
 table.dataTable th:active {
   outline: none;
