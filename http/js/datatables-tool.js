@@ -1,8 +1,56 @@
 // datatables-tool.js
 
+// Links clickable etc. in one row of data
+var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
+  $('td', tr).each(function(){
+      $(this).html(
+          $(this).html().replace(
+              /((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)/g,
+              '<a href="$1" target="_blank">$1</a>'
+          )
+      )
+  })
+  return tr
+}
+
+// Save column status to the filesystem in the view's box
+var saveState = function (oSettings, oData) {
+  var j = JSON.stringify(oData)
+  console.log("save settings", j)
+  var fname = escapeshell("settings_" + currentActiveTable + ".json")
+  scraperwiki.exec("echo -n <<ENDOFJSON >" + fname + ".new " + escapeshell(j) + "\nENDOFJSON\n" + 
+    "mv " + fname + ".new " + fname + "; " + 
+    "echo -n " + escapeshell(currentActiveTable) + " >active_table.txt",
+    function(content) { 
+      if (content != "") {
+        scraperwiki.alert("Unexpected response!", content, "error")
+      }
+    }, 
+    function(jqXHR, textStatus, errorThrown) {
+      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
+    }
+  )
+}
+
+// Read active table
+var loadActiveTable = function(callback) {
+  scraperwiki.exec("touch active_table.txt; cat active_table.txt",
+    function(content) { 
+      callback(content)
+    }, 
+    function(jqXHR, textStatus, errorThrown) {
+      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
+    }
+  )
+}
+
+// Escape identifiers
 var escapeSQL = function(column_name) {
   return '"' + column_name.replace(/"/g, '""') + '"'
 }
+var escapeshell = function(cmd) {
+    return "'"+cmd.replace(/'/g,"'\\''")+"'";
+};
 
 // Function to map JSON data between DataTables format and ScraperWiki's SQL endpoint format.
 // It returns a function for the fnServerData parameter
@@ -148,7 +196,9 @@ var constructDataTable = function(i, table_name) {
         // Really hackily replace their rubbish search input with a nicer one
         var $copy = $('.dataTables_filter label input').clone(true).addClass('search-query')
         $('.dataTables_filter').empty().append($copy)
-      }
+      },
+      "bStateSave": true,
+      "fnStateSave": saveState,
     })
   })
 }
@@ -161,41 +211,33 @@ var constructTabs = function(tables, active_table){
   var $ul = $('<ul>').addClass('nav nav-tabs').appendTo($tabs)
   $.each(tables, function(i, table_name){
     var li = '<li>'
-    if(table_name == active_table){
+    if (table_name == active_table){
       var li = '<li class="active">'
+      currentActiveTable = table_name
     }
     $(li).append('<a href="#">' + table_name + '</a>').bind('click', function(e){
       e.preventDefault()
       $(this).addClass('active').siblings('.active').removeClass('active')
+      currentActiveTable = table_name
       constructDataTable(i, table_name)
     }).appendTo($ul)
   })
 }
 
 // Make all the DataTables and their tabs
-var constructDataTables = function() {
-  var first_table_name = tables[0]
+var constructDataTables = function(first_table_name) {
+  if (!first_table_name) {
+    first_table_name = tables[0]
+  }
   constructTabs(tables, first_table_name)
   constructDataTable(0, first_table_name)
-}
-
-// Links clickable etc. in one row of data
-var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
-  $('td', tr).each(function(){
-      $(this).html(
-          $(this).html().replace(
-              /((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)/g,
-              '<a href="$1" target="_blank">$1</a>'
-          )
-      )
-  })
-  return tr
 }
 
 // Main entry point, make the data table
 var settings
 var sqliteEndpoint
 var tables
+var currentActiveTable
 $(function(){
   settings = scraperwiki.readSettings()
   sqliteEndpoint = settings.target.url + '/sqlite'
@@ -206,7 +248,9 @@ $(function(){
       tables.push(data[i].name)
     })
     console.log("Tables are:", tables)
-    constructDataTables()
+    loadActiveTable(function(saved_active_table) { 
+      constructDataTables(saved_active_table)
+    })
   }, function(jqXHR, textStatus, errorThrown) {
     scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
   })
