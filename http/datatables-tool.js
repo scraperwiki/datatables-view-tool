@@ -130,7 +130,7 @@ var constructDataTable = function(i, table_name) {
 		$t.append(thead)
 
 		// Fill in the datatables object
-		$t.dataTable( {
+		$t.dataTable({
 			"bProcessing": true,
 			"bServerSide": true,
 			"bDeferRender": true,
@@ -138,23 +138,21 @@ var constructDataTable = function(i, table_name) {
 			"sPaginationType": "full_numbers",
 			"bFilter": true,
 			"iDisplayLength": 1000,
-            "bScrollCollapse": true,
-//            "sDom": '<"H"<"#schema_'+table_name+'">lfr>t<"F"ip>',
-            "sDom": '<"H"fip>rt<"F"pi>',
+      "bScrollCollapse": true,
+      "sDom": '<"H"fip>rt<"F"pi>',
 			"fnServerData": convertData(table_name, column_names),
-            "fnRowCallback": function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
-                $('td', tr).each(function(){
-                    $(this).html(
-                        $(this).html().replace(
-                            /((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)/g,
-                            '<a href="$1">$1</a>'
-                        )
-                    );
-                });
-                return tr;
-            }
-
-		} );
+      "fnRowCallback": function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
+          $('td', tr).each(function(){
+              $(this).html(
+                  $(this).html().replace(
+                      /((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)/g,
+                      '<a href="$1">$1</a>'
+                  )
+              );
+          });
+          return tr;
+      }
+		});
 	})
 }
 
