@@ -13,10 +13,10 @@ var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
   return tr
 }
 
-// Save column status to the filesystem in the view's box
+// Save current active tab/table, and its status to the filesystem in the view's box
 var saveState = function (oSettings, oData) {
+  console.log("saveState", oData)
   var j = JSON.stringify(oData)
-  console.log("save settings", j)
   var fname = escapeshell("settings_" + currentActiveTable + ".json")
   scraperwiki.exec("echo -n <<ENDOFJSON >" + fname + ".new " + escapeshell(j) + "\nENDOFJSON\n" + 
     "mv " + fname + ".new " + fname + "; " + 
@@ -32,7 +32,49 @@ var saveState = function (oSettings, oData) {
   )
 }
 
-// Read active table
+// Add this in, needed for loadState which must return asynchronously
+scraperwiki.async_exec = function(cmd, success, error) {
+  var options, settings;
+  settings = scraperwiki.readSettings();
+  options = {
+    url: "" + window.location.protocol + "//" + window.location.host + "/" + scraperwiki.boxName + "/exec",
+    async: true,
+    type: "POST",
+    data: {
+      apikey: settings.source.apikey,
+      cmd: cmd
+    }
+  };
+  if (success != null) {
+    options.success = success;
+  }
+  if (error != null) {
+    options.error = error;
+  }
+  return $.ajax(options);
+};
+
+// Restore column status from the view's box's filesystem
+var loadState = function (oSettings) {
+  var fname = escapeshell("settings_" + currentActiveTable + ".json")
+  scraperwiki.async_exec("touch " + fname + "; cat " + fname,
+    function(content) { 
+      try {
+        var oData = JSON.parse(content);
+        console.log("loadState", oData)
+        return oData
+      } catch (e) {
+        return false 
+      }
+    }, 
+    function(jqXHR, textStatus, errorThrown) {
+      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
+    }
+  )
+}
+
+
+// Read active table from the box's filesystem and pass it on to callback
 var loadActiveTable = function(callback) {
   scraperwiki.exec("touch active_table.txt; cat active_table.txt",
     function(content) { 
@@ -199,6 +241,7 @@ var constructDataTable = function(i, table_name) {
       },
       "bStateSave": true,
       "fnStateSave": saveState,
+      "fnStateLoad": loadState,
     })
   })
 }
@@ -210,15 +253,17 @@ var constructTabs = function(tables, active_table){
   var $tabs = $('<div>').addClass('tabs-below').appendTo('body')
   var $ul = $('<ul>').addClass('nav nav-tabs').appendTo($tabs)
   $.each(tables, function(i, table_name){
-    var li = '<li>'
+    var li = '<li id="tab_' + i + '">'
     if (table_name == active_table){
-      var li = '<li class="active">'
+      var li = '<li id="tab_' + i + '" class="active">'
       currentActiveTable = table_name
+      currentActiveTableIndex = i
     }
     $(li).append('<a href="#">' + table_name + '</a>').bind('click', function(e){
       e.preventDefault()
       $(this).addClass('active').siblings('.active').removeClass('active')
       currentActiveTable = table_name
+      currentActiveTableIndex = i
       constructDataTable(i, table_name)
     }).appendTo($ul)
   })
@@ -230,7 +275,8 @@ var constructDataTables = function(first_table_name) {
     first_table_name = tables[0]
   }
   constructTabs(tables, first_table_name)
-  constructDataTable(0, first_table_name)
+  $("#tab_" + currentActiveTableIndex).trigger('click')
+  console.log($("#tab_" + currentActiveTableIndex))
 }
 
 // Main entry point, make the data table
@@ -238,6 +284,7 @@ var settings
 var sqliteEndpoint
 var tables
 var currentActiveTable
+var currentActiveTableIndex
 $(function(){
   settings = scraperwiki.readSettings()
   sqliteEndpoint = settings.target.url + '/sqlite'
