@@ -148,11 +148,11 @@ var constructDataTable = function(i, table_name) {
                       /((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)/g,
                       '<a href="$1" target="_blank">$1</a>'
                   )
-              );
-          });
-          return tr;
+              )
+          })
+          return tr
       }
-		});
+		})
 	})
 }
 
