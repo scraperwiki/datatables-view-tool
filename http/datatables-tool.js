@@ -1,18 +1,5 @@
 // datatables-tool.js
 
-// When there are errors call this
-var showAlert = function(title, message, level) {
-	var $div;
-	level = level || 0;
-	$div = $("<div>").addClass("alert").text(message);
-	$div.prepend('<button type="button" class="close" data-dismiss="alert">×</button>');
-	$div.prepend("<strong>" + title + "</strong> ");
-	if (level) {
-		$div.addClass("alert-error");
-	}
-	return $div.prependTo("body");
-};
-
 var escapeSQL = function(column_name) {
 	return "\"" + column_name + "\""
 }
@@ -43,7 +30,7 @@ var convertData = function(table_name, column_names) {
 				if (params["sSortDir_" + i] == 'desc') {
 					order_part += " desc"
 				} else if (params["sSortDir_" + i] != 'asc') {
-					showAlert("Got unknown sSortDir_" + i + " value in table " + table_name)
+					scraperwiki.alert("Got unknown sSortDir_" + i + " value in table " + table_name)
 				}
 				order_parts.push(order_part)
 			}
@@ -91,11 +78,11 @@ var convertData = function(table_name, column_names) {
 					})
 				}, 
 				"error": function(jqXHR, textStatus, errorThrown) {
-					showAlert(errorThrown, jqXHR.responseText, "error")
+					scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
 				}
 			} );
 		}, function(jqXHR, textStatus, errorThrown) {
-			showAlert(errorThrown, jqXHR.responseText, "error")
+			scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
 		})
 	}
 }
@@ -105,7 +92,7 @@ function getTableColumnNames(table_name, callback){
     scraperwiki.sql("select * from " + escapeSQL(table_name) + " limit 1", function(data) {
 		callback(_.keys(data[0]))
 	}, function(jqXHR, textStatus, errorThrown) {
-		showAlert(errorThrown, jqXHR.responseText, "error")
+		scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
 	})
 }
 
@@ -130,7 +117,7 @@ var constructDataTable = function(i, table_name) {
 	getTableColumnNames(table_name, function(column_names) {
 		console.log("Columns", column_names)
 		if (column_names.length == 0) {
-			showAlert("No data in the table", jqXHR.responseText)
+			scraperwiki.alert("No data in the table", jqXHR.responseText)
 			return
 		}
 
@@ -205,7 +192,7 @@ $(function(){
 		console.log("Tables are:", tables)
 		constructDataTables()
 	}, function(jqXHR, textStatus, errorThrown) {
-		showAlert(errorThrown, jqXHR.responseText, "error")
+		scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
 	})
 
 });
