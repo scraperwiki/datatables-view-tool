@@ -104,7 +104,7 @@ var constructDataTable = function(i, table_name) {
 	var $outer = $("#" + id)
 	if ($outer.length == 0) {
 		console.log("making a new table:", table_name)
-		$outer = $('<div class="maintable" id="table_' + i + '"> <table class="innertable display"></table> </div>')
+		$outer = $('<div class="maintable" id="table_' + i + '"> <table class="table table-striped table-bordered innertable display"></table> </div>')
 		$('body').append($outer)
 	} else {
 		$outer.show()
@@ -135,11 +135,12 @@ var constructDataTable = function(i, table_name) {
 			"bServerSide": true,
 			"bDeferRender": true,
 			"bPaginate": true,
-			"sPaginationType": "full_numbers",
 			"bFilter": true,
 			"iDisplayLength": 500,
       "bScrollCollapse": true,
-      "sDom": '<"H"fip>rt<"F"pi>',
+      "sDom": 'pifrt',
+      //"sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>",
+      "sPaginationType": "bootstrap",
 			"fnServerData": convertData(table_name, column_names),
       "fnRowCallback": function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
           $('td', tr).each(function(){
