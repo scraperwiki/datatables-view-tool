@@ -138,8 +138,7 @@ var constructDataTable = function(i, table_name) {
       "bFilter": true,
       "iDisplayLength": 500,
       "bScrollCollapse": true,
-      "sDom": 'pifrt',
-      //"sDom": "<'row-fluid'<'span6'l><'span6'f>r>t<'row-fluid'<'span6'i><'span6'p>>",
+      "sDom": 'pfirt',
       "sPaginationType": "bootstrap",
       "fnServerData": convertData(table_name, column_names),
       "fnRowCallback": function( tr, array, iDisplayIndex, iDisplayIndexFull ) {

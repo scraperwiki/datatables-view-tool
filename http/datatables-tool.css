@@ -10,12 +10,16 @@ html, body {
 }
 
 .dataTables_filter {
+  float: right;
 }
 
 .dataTables_info {
+  text-align: center;
 }
 
 .dataTables_paginate {
+  float: left;
+  margin: 0;
 }
 
 ul.nav-tabs {
