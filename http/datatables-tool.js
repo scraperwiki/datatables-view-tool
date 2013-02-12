@@ -137,11 +137,10 @@ var constructDataTable = function(i, table_name) {
 			"bPaginate": true,
 			"sPaginationType": "full_numbers",
 			"bFilter": true,
-			"iDisplayLength": 100,
+			"iDisplayLength": 1000,
             "bScrollCollapse": true,
 //            "sDom": '<"H"<"#schema_'+table_name+'">lfr>t<"F"ip>',
-            "sDom": '<"H"fip>rt<"F"pil>',
-			"aLengthMenu": [10, 100, 1000],
+            "sDom": '<"H"fip>rt<"F"pi>',
 			"fnServerData": convertData(table_name, column_names),
             "fnRowCallback": function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
                 $('td', tr).each(function(){
