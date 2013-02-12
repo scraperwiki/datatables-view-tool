@@ -1,7 +1,7 @@
 // datatables-tool.js
 
 var escapeSQL = function(column_name) {
-	return "\"" + column_name + "\""
+	return '"' + column_name.replace(/"/g, '""') + '"'
 }
 
 // Function to map JSON data between DataTables format and ScraperWiki's SQL endpoint format.
