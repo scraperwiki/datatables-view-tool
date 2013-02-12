@@ -146,7 +146,7 @@ var constructDataTable = function(i, table_name) {
               $(this).html(
                   $(this).html().replace(
                       /((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)/g,
-                      '<a href="$1">$1</a>'
+                      '<a href="$1" target="_blank">$1</a>'
                   )
               );
           });
