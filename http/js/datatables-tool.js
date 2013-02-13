@@ -31,21 +31,37 @@ var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
 
 // Save current active tab/table, and its status to the filesystem in the view's box
 var saveState = function (oSettings, oData) {
-  console.log("saveState", oData)
+  console.log("saveState", currentActiveTable, currentActiveTableIndex, JSON.stringify(oData))
   var j = JSON.stringify(oData)
   var fname = escapeshell("settings_" + currentActiveTable + ".json")
-  scraperwiki.exec("echo -n <<ENDOFJSON >" + fname + ".new " + escapeshell(j) + "\nENDOFJSON\n" + 
-    "mv " + fname + ".new " + fname + "; " + 
-    "echo -n " + escapeshell(currentActiveTable) + " >active_table.txt",
+  scraperwiki.exec("echo -n <<ENDOFJSON >" + fname + ".new.$$ " + escapeshell(j) + "\nENDOFJSON\n" + 
+    "mv " + fname + ".new.$$ " + fname,
     function(content) { 
       if (content != "") {
-        scraperwiki.alert("Unexpected response!", content, "error")
+        scraperwiki.alert("Unexpected saveState response!", content, "error")
+      }
+      saveActiveTable()
+    }, 
+    function(jqXHR, textStatus, errorThrown) {
+      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
+    }
+  )
+}
+
+// Save just the active table
+var saveActiveTable = function () {
+  console.log("saveActiveTable", currentActiveTable)
+  scraperwiki.exec("echo -n " + escapeshell(currentActiveTable) + " >active_table.txt",
+    function(content) { 
+      if (content != "") {
+        scraperwiki.alert("Unexpected saveActiveTable response!", content, "error")
       }
     }, 
     function(jqXHR, textStatus, errorThrown) {
       scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
     }
   )
+
 }
 
 // Add this in, needed for loadState which must return asynchronously
@@ -54,7 +70,7 @@ scraperwiki.async_exec = function(cmd, success, error) {
   settings = scraperwiki.readSettings();
   options = {
     url: "" + window.location.protocol + "//" + window.location.host + "/" + scraperwiki.boxName + "/exec",
-    async: true,
+    async: false,
     type: "POST",
     data: {
       apikey: settings.source.apikey,
@@ -73,20 +89,21 @@ scraperwiki.async_exec = function(cmd, success, error) {
 // Restore column status from the view's box's filesystem
 var loadState = function (oSettings) {
   var fname = escapeshell("settings_" + currentActiveTable + ".json")
+  var oData = false
   scraperwiki.async_exec("touch " + fname + "; cat " + fname,
     function(content) { 
       try {
-        var oData = JSON.parse(content);
-        console.log("loadState", oData)
-        return oData
+        oData = JSON.parse(content)
       } catch (e) {
-        return false 
+	oData = false
       }
     }, 
     function(jqXHR, textStatus, errorThrown) {
       scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
     }
   )
+  console.log("loadState", currentActiveTable, currentActiveTableIndex, JSON.stringify(oData))
+  return oData
 }
 
 
