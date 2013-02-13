@@ -4,9 +4,17 @@
 var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
   $('td', tr).each(function(){
       $(this).html(
-          $(this).html().replace(
+          $(this).html()
+          .replace(
               /((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)/g,
               '<a href="$1" target="_blank">$1</a>'
+          )
+          // convert images to themselves embedded.
+          // XXX _normal is to match images like: https://si0.twimg.com/profile_images/2559953209/pM981LrS_normal - remove it
+          // if it causes trouble
+          .replace(
+              />((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+(\.jpeg|\.png|\.jpg|\.gif|\.bmp|_normal))</ig,
+              '><img src="$1" height="48px"><'
           )
       )
   })
