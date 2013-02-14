@@ -72,6 +72,7 @@ scraperwiki.async_exec = function(cmd, success, error) {
     url: "" + window.location.protocol + "//" + window.location.host + "/" + scraperwiki.box + "/exec",
     async: false,
     type: "POST",
+    dataType: "text",
     data: {
       apikey: settings.source.apikey,
       cmd: cmd
