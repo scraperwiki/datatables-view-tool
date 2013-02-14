@@ -67,6 +67,17 @@ html, body {
   display: none;
 }
 
+.dataTables_processing {
+  position: absolute;
+  top: 0;
+  left: 35%;
+  width: 30%;
+  text-align: center;
+  background-color: #fff;
+  z-index: 100;
+  line-height: 40px;
+}
+
 .tabs-below {
   position: absolute;
   z-index: 100;
@@ -83,4 +94,9 @@ html, body {
 
 .tabs-below .nav-tabs > li > a {
   padding: 5px 10px;
+}
+
+.table th, .table td {
+  padding: 4px 5px;
+  line-height: 22px;
 }
