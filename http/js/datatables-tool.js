@@ -15,7 +15,7 @@ var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
           // if it causes trouble
           .replace(
               />((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+(\.jpeg|\.png|\.jpg|\.gif|\.bmp|_normal))</ig,
-              '><img src="$1" height="48px"><'
+              '><img src="$1" height="48"><'
           )
           // shorten displayed part of any URLs longer than 30 characters, down to 30
           .replace(
