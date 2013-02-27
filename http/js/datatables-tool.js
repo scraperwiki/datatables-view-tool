@@ -211,15 +211,6 @@ var convertData = function(table_name, column_names) {
   }
 }
 
-// Find the column names for a given table
-function getTableColumnNames(table_name, callback){
-    scraperwiki.sql("select * from " + escapeSQL(table_name) + " limit 1", function(data) {
-    callback(_.keys(data[0]))
-  }, function(jqXHR, textStatus, errorThrown) {
-    scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-  })
-}
-
 // Make one of the DataTables (in one tab)
 // 'i' should be the integer position of the datatable in the list of all tables
 // 'table_name' is obviously the name of the active table
@@ -240,43 +231,42 @@ var constructDataTable = function(i, table_name) {
   var $t = $outer.find("table")
 
   // Find out the column names
-  getTableColumnNames(table_name, function(column_names) {
-    console.log("Columns", column_names)
-    if (column_names.length == 0) {
-      scraperwiki.alert("No data in the table", jqXHR.responseText)
-      return
-    }
+  column_names = meta.table[table_name].columnNames
+  console.log("Columns", column_names)
+  if (column_names.length == 0) {
+    scraperwiki.alert("No data in the table", jqXHR.responseText)
+    return
+  }
 
-    // Make the column headings
-        var thead = '<thead><tr>'
-    _.each(column_names, function(column_name) {
-      thead += '<th>' + column_name + '</th>'
-    })
-    thead += '</tr></thead>'
-    $t.append(thead)
+  // Make the column headings
+      var thead = '<thead><tr>'
+  _.each(column_names, function(column_name) {
+    thead += '<th>' + column_name + '</th>'
+  })
+  thead += '</tr></thead>'
+  $t.append(thead)
 
-    // Fill in the datatables object
-    $t.dataTable({
-      "bProcessing": true,
-      "bServerSide": true,
-      "bDeferRender": true,
-      "bPaginate": true,
-      "bFilter": true,
-      "iDisplayLength": 500,
-      "bScrollCollapse": true,
-      "sDom": '<"table_controls"pfi>r<"table_wrapper"t>',
-      "sPaginationType": "bootstrap",
-      "fnServerData": convertData(table_name, column_names),
-      "fnRowCallback": prettifyRow,
-      "fnInitComplete": function(){
-        // Really hackily replace their rubbish search input with a nicer one
-        var $copy = $('.dataTables_filter label input').clone(true).addClass('search-query')
-        $('.dataTables_filter').empty().append($copy)
-      },
-      "bStateSave": true,
-      "fnStateSave": saveState,
-      "fnStateLoad": loadState,
-    })
+  // Fill in the datatables object
+  $t.dataTable({
+    "bProcessing": true,
+    "bServerSide": true,
+    "bDeferRender": true,
+    "bPaginate": true,
+    "bFilter": true,
+    "iDisplayLength": 500,
+    "bScrollCollapse": true,
+    "sDom": '<"table_controls"pfi>r<"table_wrapper"t>',
+    "sPaginationType": "bootstrap",
+    "fnServerData": convertData(table_name, column_names),
+    "fnRowCallback": prettifyRow,
+    "fnInitComplete": function(){
+      // Really hackily replace their rubbish search input with a nicer one
+      var $copy = $('.dataTables_filter label input').clone(true).addClass('search-query')
+      $('.dataTables_filter').empty().append($copy)
+    },
+    "bStateSave": true,
+    "fnStateSave": saveState,
+    "fnStateLoad": loadState,
   })
 }
 
@@ -319,15 +309,15 @@ var sqliteEndpoint
 var tables
 var currentActiveTable
 var currentActiveTableIndex
+var meta
 $(function(){
   settings = scraperwiki.readSettings()
   sqliteEndpoint = settings.target.url + '/sqlite'
 
-  scraperwiki.sql("select name from " + escapeSQL('sqlite_master') + " where type = 'table'", function(data, textStatus, jqXHR) {
-    tables = []
-    $.each(data, function (i) {
-      tables.push(data[i].name)
-    })
+  scraperwiki.sql.meta(function(newMeta) {
+    meta = newMeta
+    console.log(meta)
+    tables = _.keys(meta.table)
     console.log("Tables are:", tables)
     loadActiveTable(function(saved_active_table) { 
       constructDataTables(saved_active_table)
