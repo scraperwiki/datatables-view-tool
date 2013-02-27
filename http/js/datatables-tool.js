@@ -234,7 +234,7 @@ var constructDataTable = function(i, table_name) {
   column_names = meta.table[table_name].columnNames
   console.log("Columns", column_names)
   if (column_names.length == 0) {
-    scraperwiki.alert("No data in the table", jqXHR.responseText)
+    scraperwiki.alert("No columns in the table", jqXHR.responseText)
     return
   }
 
@@ -267,6 +267,9 @@ var constructDataTable = function(i, table_name) {
     "bStateSave": true,
     "fnStateSave": saveState,
     "fnStateLoad": loadState,
+    "oLanguage": {
+      "sEmptyTable": "This table is empty"
+     }
   })
 }
 
