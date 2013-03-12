@@ -11,10 +11,16 @@ var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
               '<a href="$1" target="_blank">$1</a>'
           )
           // then convert images to themselves embedded.
-          // XXX _normal is to match images like: https://si0.twimg.com/profile_images/2559953209/pM981LrS_normal - remove it
-          // if it causes trouble
+          // XXX _normal is to match Twitter images, watch for it causing trouble
+	  // e.g. https://si0.twimg.com/profile_images/2559953209/pM981LrS_normal - remove it
           .replace(
               />((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+(\.jpeg|\.png|\.jpg|\.gif|\.bmp|_normal))</ig,
+              '><img src="$1" height="48"><'
+          )
+	  // match LinkedIn image URLs, which always have "licdn.com/mpr/mpr" in them.
+	  // e.g. http://m3.licdn.com/mpr/mprx/0_oCf8SHoyvJ0Wq_CEo87xSEoAvRHIq5CEe_R0SEw2EOpRI3voQk0uio0GUveqBC_QITDYCDvcT0rm
+          .replace(
+              />((http|https|ftp):\/\/[a-z0-9\.]+licdn.com\/mpr\/mpr[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)</ig,
               '><img src="$1" height="48"><'
           )
           // shorten displayed part of any URLs longer than 30 characters, down to 30
