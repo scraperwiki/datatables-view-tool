@@ -1,5 +1,10 @@
 // datatables-tool.js
 
+// Handle AJAX type errors
+var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
+  scraperwiki.alert(errorThrown, $(jqXHR.responseText).text(), "error")
+}
+
 // Links clickable etc. in one row of data
 var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
   $('td', tr).each(function(){
@@ -11,11 +16,17 @@ var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
               '<a href="$1" target="_blank">$1</a>'
           )
           // then convert images to themselves embedded.
-          // XXX _normal is to match images like: https://si0.twimg.com/profile_images/2559953209/pM981LrS_normal - remove it
-          // if it causes trouble
+          // XXX _normal is to match Twitter images, watch for it causing trouble
+	  // e.g. https://si0.twimg.com/profile_images/2559953209/pM981LrS_normal - remove it
           .replace(
               />((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+(\.jpeg|\.png|\.jpg|\.gif|\.bmp|_normal))</ig,
-              '><img src="$1" height="48px"><'
+              '><img src="$1" height="48"><'
+          )
+	  // match LinkedIn image URLs, which always have "licdn.com/mpr/mpr" in them.
+	  // e.g. http://m3.licdn.com/mpr/mprx/0_oCf8SHoyvJ0Wq_CEo87xSEoAvRHIq5CEe_R0SEw2EOpRI3voQk0uio0GUveqBC_QITDYCDvcT0rm
+          .replace(
+              />((http|https|ftp):\/\/[a-z0-9\.]+licdn.com\/mpr\/mpr[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)</ig,
+              '><img src="$1" height="48"><'
           )
           // shorten displayed part of any URLs longer than 30 characters, down to 30
           .replace(
@@ -41,10 +52,7 @@ var saveState = function (oSettings, oData) {
         scraperwiki.alert("Unexpected saveState response!", content, "error")
       }
       saveActiveTable()
-    }, 
-    function(jqXHR, textStatus, errorThrown) {
-      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-    }
+    }, handle_ajax_error
   )
 }
 
@@ -56,10 +64,7 @@ var saveActiveTable = function () {
       if (content != "") {
         scraperwiki.alert("Unexpected saveActiveTable response!", content, "error")
       }
-    }, 
-    function(jqXHR, textStatus, errorThrown) {
-      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-    }
+    }, handle_ajax_error
   )
 
 }
@@ -98,10 +103,7 @@ var loadState = function (oSettings) {
       } catch (e) {
 	oData = false
       }
-    }, 
-    function(jqXHR, textStatus, errorThrown) {
-      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-    }
+    }, handle_ajax_error
   )
   console.log("loadState", currentActiveTable, currentActiveTableIndex, JSON.stringify(oData))
   return oData
@@ -113,10 +115,7 @@ var loadActiveTable = function(callback) {
   scraperwiki.exec("touch active_table.txt; cat active_table.txt",
     function(content) { 
       callback(content)
-    }, 
-    function(jqXHR, textStatus, errorThrown) {
-      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-    }
+    }, handle_ajax_error
   )
 }
 
@@ -201,23 +200,10 @@ var convertData = function(table_name, column_names) {
             "iTotalDisplayRecords": data[0].display_total // after filtering
           })
         }, 
-        "error": function(jqXHR, textStatus, errorThrown) {
-          scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-        }
+        "error": handle_ajax_error
       } );
-    }, function(jqXHR, textStatus, errorThrown) {
-      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-    })
+    }, handle_ajax_error)
   }
-}
-
-// Find the column names for a given table
-function getTableColumnNames(table_name, callback){
-    scraperwiki.sql("select * from " + escapeSQL(table_name) + " limit 1", function(data) {
-    callback(_.keys(data[0]))
-  }, function(jqXHR, textStatus, errorThrown) {
-    scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-  })
 }
 
 // Make one of the DataTables (in one tab)
@@ -240,43 +226,45 @@ var constructDataTable = function(i, table_name) {
   var $t = $outer.find("table")
 
   // Find out the column names
-  getTableColumnNames(table_name, function(column_names) {
-    console.log("Columns", column_names)
-    if (column_names.length == 0) {
-      scraperwiki.alert("No data in the table", jqXHR.responseText)
-      return
-    }
+  column_names = meta.table[table_name].columnNames
+  console.log("Columns", column_names)
+  if (column_names.length == 0) {
+    scraperwiki.alert("No columns in the table", jqXHR.responseText)
+    return
+  }
 
-    // Make the column headings
-        var thead = '<thead><tr>'
-    _.each(column_names, function(column_name) {
-      thead += '<th>' + column_name + '</th>'
-    })
-    thead += '</tr></thead>'
-    $t.append(thead)
+  // Make the column headings
+      var thead = '<thead><tr>'
+  _.each(column_names, function(column_name) {
+    thead += '<th>' + column_name + '</th>'
+  })
+  thead += '</tr></thead>'
+  $t.append(thead)
 
-    // Fill in the datatables object
-    $t.dataTable({
-      "bProcessing": true,
-      "bServerSide": true,
-      "bDeferRender": true,
-      "bPaginate": true,
-      "bFilter": true,
-      "iDisplayLength": 500,
-      "bScrollCollapse": true,
-      "sDom": '<"table_controls"pfi>r<"table_wrapper"t>',
-      "sPaginationType": "bootstrap",
-      "fnServerData": convertData(table_name, column_names),
-      "fnRowCallback": prettifyRow,
-      "fnInitComplete": function(){
-        // Really hackily replace their rubbish search input with a nicer one
-        var $copy = $('.dataTables_filter label input').clone(true).addClass('search-query')
-        $('.dataTables_filter').empty().append($copy)
-      },
-      "bStateSave": true,
-      "fnStateSave": saveState,
-      "fnStateLoad": loadState,
-    })
+  // Fill in the datatables object
+  $t.dataTable({
+    "bProcessing": true,
+    "bServerSide": true,
+    "bDeferRender": true,
+    "bPaginate": true,
+    "bFilter": true,
+    "iDisplayLength": 500,
+    "bScrollCollapse": true,
+    "sDom": '<"table_controls"pfi>r<"table_wrapper"t>',
+    "sPaginationType": "bootstrap",
+    "fnServerData": convertData(table_name, column_names),
+    "fnRowCallback": prettifyRow,
+    "fnInitComplete": function(){
+      // Really hackily replace their rubbish search input with a nicer one
+      var $copy = $('.dataTables_filter label input').clone(true).addClass('search-query')
+      $('.dataTables_filter').empty().append($copy)
+    },
+    "bStateSave": true,
+    "fnStateSave": saveState,
+    "fnStateLoad": loadState,
+    "oLanguage": {
+      "sEmptyTable": "This table is empty"
+     }
   })
 }
 
@@ -319,23 +307,20 @@ var sqliteEndpoint
 var tables
 var currentActiveTable
 var currentActiveTableIndex
+var meta
 $(function(){
   settings = scraperwiki.readSettings()
   sqliteEndpoint = settings.target.url + '/sqlite'
 
-  scraperwiki.sql("select name from " + escapeSQL('sqlite_master') + " where type = 'table'", function(data, textStatus, jqXHR) {
-    tables = []
-    $.each(data, function (i) {
-      tables.push(data[i].name)
-    })
+  scraperwiki.sql.meta(function(newMeta) {
+    meta = newMeta
+    console.log(meta)
+    tables = _.keys(meta.table)
     console.log("Tables are:", tables)
     loadActiveTable(function(saved_active_table) { 
       constructDataTables(saved_active_table)
     })
-  }, function(jqXHR, textStatus, errorThrown) {
-    scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-  })
-
+  }, handle_ajax_error)
 });
 
 
