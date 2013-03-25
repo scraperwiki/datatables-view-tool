@@ -2,7 +2,7 @@
 
 // Handle AJAX type errors
 var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
-  scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
+  scraperwiki.alert(errorThrown, $(jqXHR.responseText).text(), "error")
 }
 
 // Links clickable etc. in one row of data
