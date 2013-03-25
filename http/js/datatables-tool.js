@@ -1,5 +1,10 @@
 // datatables-tool.js
 
+// Handle AJAX type errors
+var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
+  scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
+}
+
 // Links clickable etc. in one row of data
 var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
   $('td', tr).each(function(){
@@ -47,10 +52,7 @@ var saveState = function (oSettings, oData) {
         scraperwiki.alert("Unexpected saveState response!", content, "error")
       }
       saveActiveTable()
-    }, 
-    function(jqXHR, textStatus, errorThrown) {
-      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-    }
+    }, handle_ajax_error
   )
 }
 
@@ -62,10 +64,7 @@ var saveActiveTable = function () {
       if (content != "") {
         scraperwiki.alert("Unexpected saveActiveTable response!", content, "error")
       }
-    }, 
-    function(jqXHR, textStatus, errorThrown) {
-      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-    }
+    }, handle_ajax_error
   )
 
 }
@@ -104,10 +103,7 @@ var loadState = function (oSettings) {
       } catch (e) {
 	oData = false
       }
-    }, 
-    function(jqXHR, textStatus, errorThrown) {
-      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-    }
+    }, handle_ajax_error
   )
   console.log("loadState", currentActiveTable, currentActiveTableIndex, JSON.stringify(oData))
   return oData
@@ -119,10 +115,7 @@ var loadActiveTable = function(callback) {
   scraperwiki.exec("touch active_table.txt; cat active_table.txt",
     function(content) { 
       callback(content)
-    }, 
-    function(jqXHR, textStatus, errorThrown) {
-      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-    }
+    }, handle_ajax_error
   )
 }
 
@@ -207,13 +200,9 @@ var convertData = function(table_name, column_names) {
             "iTotalDisplayRecords": data[0].display_total // after filtering
           })
         }, 
-        "error": function(jqXHR, textStatus, errorThrown) {
-          scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-        }
+        "error": handle_ajax_error
       } );
-    }, function(jqXHR, textStatus, errorThrown) {
-      scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-    })
+    }, handle_ajax_error)
   }
 }
 
@@ -331,10 +320,7 @@ $(function(){
     loadActiveTable(function(saved_active_table) { 
       constructDataTables(saved_active_table)
     })
-  }, function(jqXHR, textStatus, errorThrown) {
-    scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
-  })
-
+  }, handle_ajax_error)
 });
 
 
