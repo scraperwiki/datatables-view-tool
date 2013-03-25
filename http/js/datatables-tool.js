@@ -42,7 +42,6 @@ var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
 
 // Save current active tab/table, and its status to the filesystem in the view's box
 var saveState = function (oSettings, oData) {
-  console.log("saveState", currentActiveTable, currentActiveTableIndex, JSON.stringify(oData))
   var j = JSON.stringify(oData)
   var fname = escapeshell("settings_" + currentActiveTable + ".json")
   scraperwiki.exec("echo -n <<ENDOFJSON >" + fname + ".new.$$ " + escapeshell(j) + "\nENDOFJSON\n" + 
@@ -58,7 +57,6 @@ var saveState = function (oSettings, oData) {
 
 // Save just the active table
 var saveActiveTable = function () {
-  console.log("saveActiveTable", currentActiveTable)
   scraperwiki.exec("echo -n " + escapeshell(currentActiveTable) + " >active_table.txt",
     function(content) { 
       if (content != "") {
@@ -105,7 +103,6 @@ var loadState = function (oSettings) {
       }
     }, handle_ajax_error
   )
-  console.log("loadState", currentActiveTable, currentActiveTableIndex, JSON.stringify(oData))
   return oData
 }
 
@@ -141,10 +138,8 @@ var convertData = function(table_name, column_names) {
     for (var i=0;i<aoData.length;i++) { 
       params[aoData[i].name] = aoData[i].value
     }
-    console.log("DataTables params:", params)
 
     // construct SQL query needed according to the parameters
-    var columns  = _.map(column_names, escapeSQL).join(",")
     var order_by = ""
     if (params.iSortingCols >= 1) {
       var order_parts = []
@@ -166,13 +161,12 @@ var convertData = function(table_name, column_names) {
       var search = "'%" + escape(params.sSearch.toLowerCase()) + "%'"
       where = " where " + _.map(column_names, function(n) { return "lower(" + escapeSQL(n) + ") like " + search }).join(" or ")
     }
-    var query = "select " + columns + 
+    var query = "select * " + 
            " from " + escapeSQL(table_name) + 
          where + 
          order_by + 
            " limit " + params.iDisplayLength + 
            " offset " + params.iDisplayStart 
-    console.log("SQL query:", query)
 
     // get column counts
     scraperwiki.sql("select (select count(*) from " + escapeSQL(table_name) + ") as total, (select count(*) from " + escapeSQL(table_name) + where + ") as display_total", function (data) {
@@ -188,9 +182,9 @@ var convertData = function(table_name, column_names) {
           var rows = []
           for (var i=0;i<response.length;i++) { 
             var row = []
-            for (k in response[i]) {
-              row.push(response[i][k])
-            }
+            _.each(meta.table[table_name].columnNames, function(col) {
+              row.push(response[i][col])
+            })
             rows.push(row)
           }
           // Send the data to dataTables
@@ -215,19 +209,16 @@ var constructDataTable = function(i, table_name) {
   var id = "table_" + i
   var $outer = $("#" + id)
   if ($outer.length == 0) {
-    console.log("making a new table:", table_name)
     $outer = $('<div class="maintable" id="table_' + i + '"> <table class="table table-striped table-bordered innertable display"></table> </div>')
     $('body').append($outer)
   } else {
     $outer.show()
-    console.log("reusing cached table:", table_name)
     return
   }
   var $t = $outer.find("table")
 
   // Find out the column names
   column_names = meta.table[table_name].columnNames
-  console.log("Columns", column_names)
   if (column_names.length == 0) {
     scraperwiki.alert("No columns in the table", jqXHR.responseText)
     return
@@ -298,7 +289,6 @@ var constructDataTables = function(first_table_name) {
   }
   constructTabs(tables, first_table_name)
   $("#tab_" + currentActiveTableIndex).trigger('click')
-  console.log($("#tab_" + currentActiveTableIndex))
 }
 
 // Main entry point, make the data table
@@ -314,9 +304,7 @@ $(function(){
 
   scraperwiki.sql.meta(function(newMeta) {
     meta = newMeta
-    console.log(meta)
     tables = _.keys(meta.table)
-    console.log("Tables are:", tables)
     loadActiveTable(function(saved_active_table) { 
       constructDataTables(saved_active_table)
     })
