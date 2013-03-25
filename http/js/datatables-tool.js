@@ -160,6 +160,11 @@ var convertData = function(table_name, column_names) {
       // There's no security risk (as endpoint is sandboxed). There could be user experience pain though.
       var search = "'%" + escape(params.sSearch.toLowerCase()) + "%'"
       where = " where " + _.map(column_names, function(n) { return "lower(" + escapeSQL(n) + ") like " + search }).join(" or ")
+      if (where.length > 1500) {
+        scraperwiki.alert("Filtering is unavailable.", "Your dataset has too many columns")
+        $(".search-query").val("").trigger("keyup")
+        return
+      }
     }
     var query = "select * " + 
            " from " + escapeSQL(table_name) + 
