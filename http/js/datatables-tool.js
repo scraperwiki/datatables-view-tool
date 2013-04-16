@@ -2,7 +2,7 @@
 
 // Handle AJAX type errors
 var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
-  scraperwiki.alert(errorThrown, $(jqXHR.responseText).text(), "error")
+  scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
 }
 
 // Links clickable etc. in one row of data
@@ -44,9 +44,9 @@ var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
 var saveState = function (oSettings, oData) {
   var j = JSON.stringify(oData)
   var fname = escapeshell("settings_" + currentActiveTable + ".json")
-  scraperwiki.exec("echo -n <<ENDOFJSON >" + fname + ".new.$$ " + escapeshell(j) + "\nENDOFJSON\n" + 
+  scraperwiki.exec("echo -n <<ENDOFJSON >" + fname + ".new.$$ " + escapeshell(j) + "\nENDOFJSON\n" +
     "mv " + fname + ".new.$$ " + fname,
-    function(content) { 
+    function(content) {
       if (content != "") {
         scraperwiki.alert("Unexpected saveState response!", content, "error")
       }
@@ -58,7 +58,7 @@ var saveState = function (oSettings, oData) {
 // Save just the active table
 var saveActiveTable = function () {
   scraperwiki.exec("echo -n " + escapeshell(currentActiveTable) + " >active_table.txt",
-    function(content) { 
+    function(content) {
       if (content != "") {
         scraperwiki.alert("Unexpected saveActiveTable response!", content, "error")
       }
@@ -95,7 +95,7 @@ var loadState = function (oSettings) {
   var fname = escapeshell("settings_" + currentActiveTable + ".json")
   var oData = false
   scraperwiki.async_exec("touch " + fname + "; cat " + fname,
-    function(content) { 
+    function(content) {
       try {
         oData = JSON.parse(content)
       } catch (e) {
@@ -110,7 +110,7 @@ var loadState = function (oSettings) {
 // Read active table from the box's filesystem and pass it on to callback
 var loadActiveTable = function(callback) {
   scraperwiki.exec("touch active_table.txt; cat active_table.txt",
-    function(content) { 
+    function(content) {
       callback(content)
     }, handle_ajax_error
   )
@@ -135,7 +135,7 @@ var convertData = function(table_name, column_names) {
   return function ( sSource, aoData, fnCallback, oSettings ) {
     // convert aoData into a normal hash (called ps)
     var params = {}
-    for (var i=0;i<aoData.length;i++) { 
+    for (var i=0;i<aoData.length;i++) {
       params[aoData[i].name] = aoData[i].value
     }
 
@@ -143,7 +143,7 @@ var convertData = function(table_name, column_names) {
     var order_by = ""
     if (params.iSortingCols >= 1) {
       var order_parts = []
-      for (var i = 0; i < params.iSortingCols; i++) { 
+      for (var i = 0; i < params.iSortingCols; i++) {
         order_part = escapeSQL(column_names[params["iSortCol_" + i]])
         if (params["sSortDir_" + i] == 'desc') {
           order_part += " desc"
@@ -153,7 +153,7 @@ var convertData = function(table_name, column_names) {
         order_parts.push(order_part)
       }
       order_by = " order by " + order_parts.join(",")
-    } 
+    }
     var where = ""
     if (params.sSearch) {
       // XXX no idea if this bog standard Javascript escape really does what we want with SQL databases.
@@ -166,12 +166,12 @@ var convertData = function(table_name, column_names) {
         return
       }
     }
-    var query = "select * " + 
-           " from " + escapeSQL(table_name) + 
-         where + 
-         order_by + 
-           " limit " + params.iDisplayLength + 
-           " offset " + params.iDisplayStart 
+    var query = "select * " +
+           " from " + escapeSQL(table_name) +
+         where +
+         order_by +
+           " limit " + params.iDisplayLength +
+           " offset " + params.iDisplayStart
 
     // get column counts
     scraperwiki.sql("select (select count(*) from " + escapeSQL(table_name) + ") as total, (select count(*) from " + escapeSQL(table_name) + where + ") as display_total", function (data) {
@@ -185,7 +185,7 @@ var convertData = function(table_name, column_names) {
         "success": function ( response ) {
           // ScraperWiki returns a list of dicts. This converts it to a list of lists.
           var rows = []
-          for (var i=0;i<response.length;i++) { 
+          for (var i=0;i<response.length;i++) {
             var row = []
             _.each(meta.table[table_name].columnNames, function(col) {
               row.push(response[i][col])
@@ -193,12 +193,12 @@ var convertData = function(table_name, column_names) {
             rows.push(row)
           }
           // Send the data to dataTables
-          fnCallback({ 
+          fnCallback({
             "aaData" : rows,
             "iTotalRecords": data[0].total, // without filtering
             "iTotalDisplayRecords": data[0].display_total // after filtering
           })
-        }, 
+        },
         "error": handle_ajax_error
       } );
     }, handle_ajax_error)
@@ -310,12 +310,8 @@ $(function(){
   scraperwiki.sql.meta(function(newMeta) {
     meta = newMeta
     tables = _.keys(meta.table)
-    loadActiveTable(function(saved_active_table) { 
+    loadActiveTable(function(saved_active_table) {
       constructDataTables(saved_active_table)
     })
   }, handle_ajax_error)
 });
-
-
-
-
