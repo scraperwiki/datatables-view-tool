@@ -268,7 +268,7 @@ var constructDataTable = function(i, table_name) {
 // 'tables' should be a list of table names.
 // 'active_table' should be the one you want to appear selected.
 var constructTabs = function(tables, active_table){
-  var $tabs = $('<div>').addClass('tabs-below').appendTo('body')
+  var $tabs = $('<div>').addClass('tabs').appendTo('body')
   var $ul = $('<ul>').addClass('nav nav-tabs').appendTo($tabs)
   $.each(tables, function(i, table_name){
     var li = '<li id="tab_' + i + '">'
