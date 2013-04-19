@@ -20,7 +20,7 @@ html, body {
 .maintable {
   position: absolute;
   z-index: 10;
-  top: 37px;
+  top: 47px;
   left: 0;
   right: 0;
   bottom: 0;
@@ -95,3 +95,11 @@ body > .alert {
   border-top: 0;
   border-bottom: 0;
 }
+
+ul.nav {
+  padding-top: 10px;
+}
+#tab_0 {
+  margin-left: 10px;
+}
+
