@@ -5,6 +5,13 @@ html, body {
   padding: 0;
 }
 
+ul.nav {
+  padding-top: 10px;
+}
+ul.nav li:first-child a {
+  margin-left: 10px;
+}
+
 .table_controls {
   position: absolute;
   z-index: 100;
@@ -94,12 +101,5 @@ body > .alert {
   border-radius: 0;
   border-top: 0;
   border-bottom: 0;
-}
-
-ul.nav {
-  padding-top: 10px;
-}
-#tab_0 {
-  margin-left: 10px;
 }
 
