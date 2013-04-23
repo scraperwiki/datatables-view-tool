@@ -2,7 +2,11 @@
 
 // Handle AJAX type errors
 var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
-  scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
+  if(jqXHR.responseText.match(/database file does not exist/) != null){
+    $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>No database has been specified in this dataset&rsquo;s <b>box.json</b> file.</p></div>')
+  } else {
+    scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
+  }
 }
 
 // Links clickable etc. in one row of data
