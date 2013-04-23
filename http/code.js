@@ -309,8 +309,12 @@ $(function(){
   scraperwiki.sql.meta(function(newMeta) {
     meta = newMeta
     tables = _.keys(meta.table)
-    loadActiveTable(function(saved_active_table) {
-      constructDataTables(saved_active_table)
-    })
+    if(tables.length){
+      loadActiveTable(function(saved_active_table) {
+        constructDataTables(saved_active_table)
+      })
+    } else {
+      $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
+    }
   }, handle_ajax_error)
 });
