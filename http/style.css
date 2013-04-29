@@ -104,8 +104,10 @@ body > .alert {
 }
 
 div.problem {
+  position: relative;
+  top: 40px;
   width: 20em;
-  margin: 40px auto 0 auto;
+  margin: 0 auto;
   padding: 8px 14px;
   text-align: center;
   color: #68460B;
