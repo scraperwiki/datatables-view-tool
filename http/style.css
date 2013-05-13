@@ -59,6 +59,7 @@ ul.nav li:first-child a {
 .dataTables_filter {
   float: right;
   margin-top: 5px;
+  min-width: 250px;
 }
 
 .dataTables_info {

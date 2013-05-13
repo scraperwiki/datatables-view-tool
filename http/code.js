@@ -255,10 +255,16 @@ var constructDataTable = function(i, table_name) {
     "sPaginationType": "bootstrap",
     "fnServerData": convertData(table_name, column_names),
     "fnRowCallback": prettifyRow,
-    "fnInitComplete": function(){
-      // Really hackily replace their rubbish search input with a nicer one
-      var $copy = $('.dataTables_filter label input').clone(true).addClass('search-query')
-      $('.dataTables_filter').empty().append($copy)
+    "fnInitComplete": function(oSettings){
+      if(oSettings.aoColumns.length > 30){
+        // Remove search box if there are so many columns the ajax request
+        // would cause a 414 Request URI Too Large error on wide datasets
+        $('#table_' + i + ' .dataTables_filter').empty()
+      } else {
+        // Otherwise really hackily replace their rubbish search input with a nicer one
+        var $copy = $('.dataTables_filter label input').clone(true).addClass('search-query')
+        $('#table_' + i + ' .dataTables_filter').html($copy)
+      }
     },
     "bStateSave": true,
     "fnStateSave": saveState,
