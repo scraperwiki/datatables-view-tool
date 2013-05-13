@@ -75,17 +75,6 @@ ul.nav li:first-child a {
   display: none;
 }
 
-.dataTables_processing {
-  position: absolute;
-  top: 0;
-  left: 35%;
-  width: 30%;
-  text-align: center;
-  background-color: #fff;
-  z-index: 100;
-  line-height: 40px;
-}
-
 .table th, .table td {
   padding: 4px 5px;
   line-height: 22px;
@@ -117,4 +106,16 @@ div.problem {
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
   border-radius: 4px;
+}
+
+.dataTables_processing {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 9000;
+  background: #fff url(img/loader.gif) center center no-repeat;
+  background-color: rgba(255,255,255,0.9);
+  text-indent: -9000px;
 }

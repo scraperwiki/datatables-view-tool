@@ -2,6 +2,7 @@
 
 // Handle AJAX type errors
 var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
+  $('body > .dataTables_processing').remove()
   if(jqXHR.responseText.match(/database file does not exist/) != null){
     $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>No database has been specified in this dataset&rsquo;s <b>box.json</b> file.</p></div>')
   } else {
@@ -250,7 +251,7 @@ var constructDataTable = function(i, table_name) {
     "bFilter": true,
     "iDisplayLength": 500,
     "bScrollCollapse": true,
-    "sDom": '<"table_controls"pfi>r<"table_wrapper"t>',
+    "sDom": 'r<"table_controls"pfi><"table_wrapper"t>',
     "sPaginationType": "bootstrap",
     "fnServerData": convertData(table_name, column_names),
     "fnRowCallback": prettifyRow,
@@ -313,6 +314,7 @@ $(function(){
   scraperwiki.sql.meta(function(newMeta) {
     meta = newMeta
     tables = _.keys(meta.table)
+    $('body > .dataTables_processing').remove()
     if(tables.length){
       loadActiveTable(function(saved_active_table) {
         constructDataTables(saved_active_table)
