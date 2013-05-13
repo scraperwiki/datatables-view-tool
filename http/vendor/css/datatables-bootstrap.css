@@ -6,39 +6,20 @@ table.table thead .sorting_desc {
   position: relative;
   cursor: pointer;
   *cursor: hand;
+  padding-right: 25px;
 }
 
 table.table thead .sorting_asc,
 table.table thead .sorting_desc {
-  padding-right: 25px;
-  background-color: #f4fafc;
+  background: #f4fafc url('../img/sort_asc_active.png') right center no-repeat;
 }
 
-table.table thead .sorting_asc:before,
-table.table thead .sorting_desc:before,
-table.table thead .sorting:hover:before {
-  content: "";
-  display: block;
-  height: 100%;
-  width: 25px;
-  position: absolute;
-  top: 0;
-  right: 0;
-  background-repeat: no-repeat;
-  background-position: center center;
-}
-
-table.table thead .sorting_asc:before {
-  background-image: url('../img/sort_asc_active.png');
-}
-
-table.table thead .sorting_desc:before {
+table.table thead .sorting_desc {
   background-image: url('../img/sort_desc_active.png');
 }
 
-table.table thead .sorting:hover:before {
-  background-image: url('../img/sort_asc.png');
-  background-color: #fff;
+table.table thead .sorting:hover {
+  background: #fff url('../img/sort_asc.png') right center no-repeat;
 }
 
 table.dataTable th:active {
