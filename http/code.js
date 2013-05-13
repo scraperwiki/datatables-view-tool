@@ -293,7 +293,7 @@ var constructTabs = function(tables, active_table){
 
 // Make all the DataTables and their tabs
 var constructDataTables = function(first_table_name) {
-  if (!first_table_name) {
+  if ( ! first_table_name || ! first_table_name in _.values(tables) ) {
     first_table_name = tables[0]
   }
   constructTabs(tables, first_table_name)
