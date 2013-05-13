@@ -10,11 +10,13 @@ table.table thead .sorting_desc {
 }
 
 table.table thead .sorting_asc,
-table.table thead .sorting_desc {
+table.table thead .sorting_desc,
+table.table thead .sorting_desc:hover {
   background: #f4fafc url('../img/sort_asc_active.png') right center no-repeat;
 }
 
-table.table thead .sorting_desc {
+table.table thead .sorting_desc,
+table.table thead .sorting_asc:hover {
   background-image: url('../img/sort_desc_active.png');
 }
 
