@@ -287,18 +287,29 @@ $(function(){
   settings = scraperwiki.readSettings()
   sqliteEndpoint = settings.target.url + '/sqlite'
 
-  scraperwiki.sql.meta(function(newMeta) {
-    meta = newMeta
-    tables = _.keys(meta.table)
-    $('body > .dataTables_processing').remove()
-    if(tables.length){
+  async.parallel([
+    function (cb) {
+      scraperwiki.sql.meta(function(newMeta) {
+        meta = newMeta
+        tables = _.keys(meta.table)
+        cb()
+      }, handle_ajax_error)
+    },
+    function (cb) {
       loadAllSettings(function() {
-        constructDataTables(allSettings['active'])
+        cb()
       })
-    } else {
-      $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
+    }],
+    function (err, results) { 
+      $('body > .dataTables_processing').remove()
+      if(tables.length){
+          currentActiveTable = allSettings['active']
+          constructDataTables(currentActiveTable)
+      } else {
+        $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
+      }
     }
-  }, handle_ajax_error)
+   )
 });
 
 
