@@ -170,8 +170,8 @@ var convertData = function(table_name, column_names) {
           // Send the data to dataTables
           fnCallback({
             "aaData" : rows,
-            "iTotalRecords": data[0].total, // without filtering
-            "iTotalDisplayRecords": data[0].display_total // after filtering
+            "iTotalRecords": counts.total, // without filtering
+            "iTotalDisplayRecords": counts.display_total // after filtering
           })
         },
         "error": handle_ajax_error
