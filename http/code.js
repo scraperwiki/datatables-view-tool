@@ -148,35 +148,43 @@ var convertData = function(table_name, column_names) {
            " limit " + params.iDisplayLength +
            " offset " + params.iDisplayStart
 
-    // get column counts
-    scraperwiki.sql("select (select count(*) from " + escapeSQL(table_name) + ") as total, (select count(*) from " + escapeSQL(table_name) + where + ") as display_total", function (data) {
-      var counts = data[0]
-
-      oSettings.jqXHR = $.ajax( {
-        "dataType": 'json',
-        "type": "GET",
-        "url": sqliteEndpoint,
-        "data": { q: query },
-        "success": function ( response ) {
-          // ScraperWiki returns a list of dicts. This converts it to a list of lists.
-          var rows = []
-          for (var i=0;i<response.length;i++) {
-            var row = []
-            _.each(meta.table[table_name].columnNames, function(col) {
-              row.push(response[i][col])
-            })
-            rows.push(row)
-          }
-          // Send the data to dataTables
-          fnCallback({
-            "aaData" : rows,
-            "iTotalRecords": counts.total, // without filtering
-            "iTotalDisplayRecords": counts.display_total // after filtering
-          })
-        },
-        "error": handle_ajax_error
-      } );
-    }, handle_ajax_error)
+    var counts
+    var rows = []
+    async.parallel([
+      function(cb) {
+        // get column counts
+        scraperwiki.sql("select (select count(*) from " + escapeSQL(table_name) + ") as total, (select count(*) from " + escapeSQL(table_name) + where + ") as display_total", function (data) {
+          counts = data[0]
+          cb()
+        }, handle_ajax_error)
+      }, function(cb) {
+        oSettings.jqXHR = $.ajax( {
+          "dataType": 'json',
+          "type": "GET",
+          "url": sqliteEndpoint,
+          "data": { q: query },
+          "success": function ( response ) {
+            // ScraperWiki returns a list of dicts. This converts it to a list of lists.
+            for (var i=0;i<response.length;i++) {
+              var row = []
+              _.each(meta.table[table_name].columnNames, function(col) {
+                row.push(response[i][col])
+              })
+              rows.push(row)
+            }
+            cb()
+          },
+          "error": handle_ajax_error
+        });
+      }], function() {
+        // Send the data to dataTables
+        fnCallback({
+          "aaData" : rows,
+          "iTotalRecords": counts.total, // without filtering
+          "iTotalDisplayRecords": counts.display_total // after filtering
+        })
+      }
+    )
   }
 }
 
