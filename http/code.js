@@ -1,5 +1,7 @@
 // datatables-tool.js
 
+var allSettings 
+
 // Handle AJAX type errors
 var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
   $('body > .dataTables_processing').remove()
@@ -45,78 +47,46 @@ var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
   return tr
 }
 
-// Save current active tab/table, and its status to the filesystem in the view's box
+// Save known state of all tabs, and active tab
 var saveState = function (oSettings, oData) {
-  var j = JSON.stringify(oData)
-  var fname = escapeshell("settings_" + currentActiveTable + ".json")
+  allSettings['active'] = currentActiveTable
+  allSettings['tables'][currentActiveTable] = oData
+
+  var j = JSON.stringify(allSettings)
+  var fname = escapeshell("allSettings.json")
   scraperwiki.exec("echo -n <<ENDOFJSON >" + fname + ".new.$$ " + escapeshell(j) + "\nENDOFJSON\n" +
     "mv " + fname + ".new.$$ " + fname,
     function(content) {
       if (content != "") {
         scraperwiki.alert("Unexpected saveState response!", content, "error")
       }
-      saveActiveTable()
     }, handle_ajax_error
   )
 }
-
-// Save just the active table
-var saveActiveTable = function () {
-  scraperwiki.exec("echo -n " + escapeshell(currentActiveTable) + " >active_table.txt",
-    function(content) {
-      if (content != "") {
-        scraperwiki.alert("Unexpected saveActiveTable response!", content, "error")
-      }
-    }, handle_ajax_error
-  )
-
-}
-
-// Add this in, needed for loadState which must return asynchronously
-scraperwiki.async_exec = function(cmd, success, error) {
-  var options, settings;
-  settings = scraperwiki.readSettings();
-  options = {
-    url: "" + window.location.protocol + "//" + window.location.host + "/" + scraperwiki.box + "/exec",
-    async: false,
-    type: "POST",
-    dataType: "text",
-    data: {
-      apikey: settings.source.apikey,
-      cmd: cmd
-    }
-  };
-  if (success != null) {
-    options.success = success;
-  }
-  if (error != null) {
-    options.error = error;
-  }
-  return $.ajax(options);
-};
 
 // Restore column status from the view's box's filesystem
 var loadState = function (oSettings) {
-  var fname = escapeshell("settings_" + currentActiveTable + ".json")
-  var oData = false
-  scraperwiki.async_exec("touch " + fname + "; cat " + fname,
-    function(content) {
-      try {
-        oData = JSON.parse(content)
-      } catch (e) {
-	oData = false
-      }
-    }, handle_ajax_error
-  )
+  if (currentActiveTable in allSettings['tables']) {
+    oData = allSettings['tables'][currentActiveTable]
+  } else {
+    oData = false
+  }
   return oData
 }
 
 
 // Read active table from the box's filesystem and pass it on to callback
-var loadActiveTable = function(callback) {
-  scraperwiki.exec("touch active_table.txt; cat active_table.txt",
+var loadAllSettings = function(callback) {
+  var fname = "allSettings.json"
+  var oData = false
+  scraperwiki.exec("touch allSettings.json; cat allSettings.json" ,
     function(content) {
-      callback(content)
+      try {
+        allSettings = JSON.parse(content)
+      } catch (e) {
+	allSettings = { tables: {}, active: null }
+      }
+      callback()
     }, handle_ajax_error
   )
 }
@@ -178,35 +148,43 @@ var convertData = function(table_name, column_names) {
            " limit " + params.iDisplayLength +
            " offset " + params.iDisplayStart
 
-    // get column counts
-    scraperwiki.sql("select (select count(*) from " + escapeSQL(table_name) + ") as total, (select count(*) from " + escapeSQL(table_name) + where + ") as display_total", function (data) {
-      var counts = data[0]
-
-      oSettings.jqXHR = $.ajax( {
-        "dataType": 'json',
-        "type": "GET",
-        "url": sqliteEndpoint,
-        "data": { q: query },
-        "success": function ( response ) {
-          // ScraperWiki returns a list of dicts. This converts it to a list of lists.
-          var rows = []
-          for (var i=0;i<response.length;i++) {
-            var row = []
-            _.each(meta.table[table_name].columnNames, function(col) {
-              row.push(response[i][col])
-            })
-            rows.push(row)
-          }
-          // Send the data to dataTables
-          fnCallback({
-            "aaData" : rows,
-            "iTotalRecords": data[0].total, // without filtering
-            "iTotalDisplayRecords": data[0].display_total // after filtering
-          })
-        },
-        "error": handle_ajax_error
-      } );
-    }, handle_ajax_error)
+    var counts
+    var rows = []
+    async.parallel([
+      function(cb) {
+        // get column counts
+        scraperwiki.sql("select (select count(*) from " + escapeSQL(table_name) + ") as total, (select count(*) from " + escapeSQL(table_name) + where + ") as display_total", function (data) {
+          counts = data[0]
+          cb()
+        }, handle_ajax_error)
+      }, function(cb) {
+        oSettings.jqXHR = $.ajax( {
+          "dataType": 'json',
+          "type": "GET",
+          "url": sqliteEndpoint,
+          "data": { q: query },
+          "success": function ( response ) {
+            // ScraperWiki returns a list of dicts. This converts it to a list of lists.
+            for (var i=0;i<response.length;i++) {
+              var row = []
+              _.each(meta.table[table_name].columnNames, function(col) {
+                row.push(response[i][col])
+              })
+              rows.push(row)
+            }
+            cb()
+          },
+          "error": handle_ajax_error
+        });
+      }], function() {
+        // Send the data to dataTables
+        fnCallback({
+          "aaData" : rows,
+          "iTotalRecords": counts.total, // without filtering
+          "iTotalDisplayRecords": counts.display_total // after filtering
+        })
+      }
+    )
   }
 }
 
@@ -317,16 +295,29 @@ $(function(){
   settings = scraperwiki.readSettings()
   sqliteEndpoint = settings.target.url + '/sqlite'
 
-  scraperwiki.sql.meta(function(newMeta) {
-    meta = newMeta
-    tables = _.keys(meta.table)
-    $('body > .dataTables_processing').remove()
-    if(tables.length){
-      loadActiveTable(function(saved_active_table) {
-        constructDataTables(saved_active_table)
+  async.parallel([
+    function (cb) {
+      scraperwiki.sql.meta(function(newMeta) {
+        meta = newMeta
+        tables = _.keys(meta.table)
+        cb()
+      }, handle_ajax_error)
+    },
+    function (cb) {
+      loadAllSettings(function() {
+        cb()
       })
-    } else {
-      $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
+    }],
+    function (err, results) { 
+      $('body > .dataTables_processing').remove()
+      if(tables.length){
+          currentActiveTable = allSettings['active']
+          constructDataTables(currentActiveTable)
+      } else {
+        $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
+      }
     }
-  }, handle_ajax_error)
+   )
 });
+
+
