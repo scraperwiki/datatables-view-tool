@@ -84,7 +84,7 @@ var loadAllSettings = function(callback) {
       try {
         allSettings = JSON.parse(content)
       } catch (e) {
-	allSettings = { tables: {}, active: null }
+        allSettings = { tables: {}, active: null }
       }
       callback()
     }, handle_ajax_error
@@ -265,7 +265,8 @@ var constructTabs = function(tables, active_table){
       currentActiveTable = table_name
       currentActiveTableIndex = i
     }
-    $(li).append('<a href="#">' + table_name + '</a>').bind('click', function(e){
+    var a = '<a href="#"'+ ( table_name.slice(0,1)=='_' ? ' class=""' : '' ) +'>' + table_name + '</a>'
+    $(li).append(a).bind('click', function(e){
       e.preventDefault()
       $(this).addClass('active').siblings('.active').removeClass('active')
       currentActiveTable = table_name
@@ -300,6 +301,11 @@ $(function(){
       scraperwiki.sql.meta(function(newMeta) {
         meta = newMeta
         tables = _.keys(meta.table)
+        // filter out tables starting with double underscore
+        // (this tool completely ignores such tables)
+        tables = _.reject(tables, function(tableName){
+          return tableName.slice(0,2) == '__'
+        })
         cb()
       }, handle_ajax_error)
     },
