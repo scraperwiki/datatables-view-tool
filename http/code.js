@@ -7,6 +7,8 @@ var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
   $('body > .dataTables_processing').remove()
   if(jqXHR.responseText.match(/database file does not exist/) != null){
     $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>No database has been specified in this dataset&rsquo;s <b>box.json</b> file.</p></div>')
+  } else if(jqXHR.responseText.match(/Gateway Time-out/) != null){
+    $('body').html('<div class="problem"><h4>This dataset is too big.</h4><p>Well this is embarassing. Your dataset is too big for the <em>View in a table tool</em> to display.</p><p>Try downloading it as a spreadsheet.</p></div>')
   } else {
     scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
   }
