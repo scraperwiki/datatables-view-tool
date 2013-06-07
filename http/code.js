@@ -6,7 +6,7 @@ var allSettings
 var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
   $('body > .dataTables_processing').remove()
   if(jqXHR.responseText.match(/database file does not exist/) != null){
-    $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>No database has been specified in this dataset&rsquo;s <b>box.json</b> file.</p></div>')
+    $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
   } else if(jqXHR.responseText.match(/Gateway Time-out/) != null){
     $('body').html('<div class="problem"><h4>This dataset is too big.</h4><p>Well this is embarassing. Your dataset is too big for the <em>View in a table tool</em> to display.</p><p>Try downloading it as a spreadsheet.</p></div>')
   } else {
@@ -280,7 +280,8 @@ var constructTabs = function(tables, active_table){
 
 // Make all the DataTables and their tabs
 var constructDataTables = function(first_table_name) {
-  if ( ! first_table_name || ! first_table_name in _.values(tables) ) {
+  if ( ! first_table_name || ! first_table_name in h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
+      }_.values(tables) ) {
     first_table_name = tables[0]
   }
   constructTabs(tables, first_table_name)
