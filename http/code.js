@@ -79,7 +79,6 @@ var loadState = function (oSettings) {
 
 // Read active table from the box's filesystem and pass it on to callback
 var loadAllSettings = function(callback) {
-  var fname = "allSettings.json"
   var oData = false
   scraperwiki.exec("touch allSettings.json; cat allSettings.json" ,
     function(content) {
