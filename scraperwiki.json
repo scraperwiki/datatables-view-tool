@@ -1,4 +1,6 @@
 {
   "displayName": "View in a table",
-  "description": "Sort, search and page through your data"
+  "description": "Sort, search and page through your data",
+  "icon": "https://s3-eu-west-1.amazonaws.com/sw-icons/tool-icon-data-table.png",
+  "color": "#f6b730"
 }
