@@ -70,6 +70,9 @@ var saveState = function (oSettings, oData) {
 var loadState = function (oSettings) {
   if (currentActiveTable in allSettings['tables']) {
     oData = allSettings['tables'][currentActiveTable]
+    // force the display length we calculated was suitable when first making the table
+    // (rather than using the saved setting)
+    oData.iLength = oSettings._iDisplayLength
   } else {
     oData = false
   }
@@ -221,6 +224,20 @@ var constructDataTable = function(i, table_name) {
   thead += '</tr></thead>'
   $t.append(thead)
 
+  var num_columns = column_names.length
+  console.log("num_columns", num_columns)
+  var rows_to_show = 500
+  if (num_columns >= 10) {
+    rows_to_show = 250
+  }
+  if (num_columns >= 20) {
+    rows_to_show = 100
+  }
+  if (num_columns >= 40) {
+    rows_to_show = 50
+  }
+  console.log("rows_to_show", rows_to_show)
+
   // Fill in the datatables object
   $t.dataTable({
     "bProcessing": true,
@@ -228,14 +245,14 @@ var constructDataTable = function(i, table_name) {
     "bDeferRender": true,
     "bPaginate": true,
     "bFilter": true,
-    "iDisplayLength": 500,
+    "iDisplayLength": rows_to_show,
     "bScrollCollapse": true,
     "sDom": 'r<"table_controls"pfi><"table_wrapper"t>',
     "sPaginationType": "bootstrap",
     "fnServerData": convertData(table_name, column_names),
     "fnRowCallback": prettifyRow,
     "fnInitComplete": function(oSettings){
-      if(oSettings.aoColumns.length > 30){
+      if (oSettings.aoColumns.length > 30){
         // Remove search box if there are so many columns the ajax request
         // would cause a 414 Request URI Too Large error on wide datasets
         $('#table_' + i + ' .dataTables_filter').empty()
