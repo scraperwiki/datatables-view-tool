@@ -120,3 +120,8 @@ div.problem {
   background-color: rgba(255,255,255,0.9);
   text-indent: -9000px;
 }
+
+img.inline {
+  max-height: 48px;
+}
+

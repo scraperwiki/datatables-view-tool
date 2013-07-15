@@ -14,39 +14,48 @@ var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
   }
 }
 
+// http://stackoverflow.com/questions/7740567/escape-markup-in-json-driven-jquery-datatable
+function htmlEncode(value) {
+  return $('<div/>').text(value).html();
+}
+function htmlDecode(value) {
+  return $('<div/>').html(value).text();
+}
+
 // Links clickable etc. in one row of data
-var prettifyRow = function( tr, array, iDisplayIndex, iDisplayIndexFull ) {
-  $('td', tr).each(function(){
-      $(this).html(
-          $(this).html()
-          // first add links onto URLs:
-          .replace(
-              /((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)/g,
-              '<a href="$1" target="_blank">$1</a>'
-          )
-          // then convert images to themselves embedded.
-          // XXX _normal is to match Twitter images, watch for it causing trouble
-	  // e.g. https://si0.twimg.com/profile_images/2559953209/pM981LrS_normal - remove it
-          .replace(
-              />((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+(\.jpeg|\.png|\.jpg|\.gif|\.bmp|_normal))</ig,
-              '><img src="$1" height="48"><'
-          )
-	  // match LinkedIn image URLs, which always have "licdn.com/mpr/mpr" in them.
-	  // e.g. http://m3.licdn.com/mpr/mprx/0_oCf8SHoyvJ0Wq_CEo87xSEoAvRHIq5CEe_R0SEw2EOpRI3voQk0uio0GUveqBC_QITDYCDvcT0rm
-          .replace(
-              />((http|https|ftp):\/\/[a-z0-9\.]+licdn.com\/mpr\/mpr[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)</ig,
-              '><img src="$1" height="48"><'
-          )
-          // shorten displayed part of any URLs longer than 30 characters, down to 30
-          .replace(
-              />((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]{31,})</g,
-              function (str, p1, offset, s) {
-                 return ">" + p1.substr(0,30) + "&hellip;<"
-              }
-          )
-      )
-  })
-  return tr
+var prettifyCell = function( content ) {
+  content = $.trim(content)
+
+  escaped_content = htmlEncode(content)
+
+  // convert images to themselves embedded.
+  // XXX _normal is to match Twitter images, watch for it causing trouble
+  // e.g. https://si0.twimg.com/profile_images/2559953209/pM981LrS_normal - remove it
+  if (content.match(/^((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+(\.jpeg|\.png|\.jpg|\.gif|\.bmp|_normal))$/ig)) {
+    content = '<img src="' + escaped_content + '" class="inline">'
+  }
+  // match LinkedIn image URLs, which always have "licdn.com/mpr/mpr" in them.
+  // e.g. http://m3.licdn.com/mpr/mprx/0_oCf8SHoyvJ0Wq_CEo87xSEoAvRHIq5CEe_R0SEw2EOpRI3voQk0uio0GUveqBC_QITDYCDvcT0rm
+  else if (content.match(/^((http|https|ftp):\/\/[a-z0-9\.]+licdn.com\/mpr\/mpr[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)$/ig)) {
+    content = '<img src="' + escaped_content + '" class="inline">'
+  }
+  // add links onto URLs:
+  else if (content.match(/^((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+)$/g)) {
+    less_30 = escaped_content
+    if (content.length > 30) {
+      less_30 = htmlEncode(content.substr(0,30)) + "&hellip;"
+    }
+    content = '<a href="' + escaped_content + '" target="_blank">' + less_30 + '</a>'
+  }
+  else {
+    less_500 = escaped_content
+    if (content.length > 500) {
+      less_500 = htmlEncode(content.substr(0,500)) + "<span title='" + content.length + " characters in total'>&hellip;</span>"
+    }
+    content = less_500
+  }
+
+  return content
 }
 
 // Save known state of all tabs, and active tab
@@ -172,7 +181,7 @@ var convertData = function(table_name, column_names) {
             for (var i=0;i<response.length;i++) {
               var row = []
               _.each(meta.table[table_name].columnNames, function(col) {
-                row.push(response[i][col])
+                row.push(prettifyCell(response[i][col]))
               })
               rows.push(row)
             }
@@ -250,7 +259,6 @@ var constructDataTable = function(i, table_name) {
     "sDom": 'r<"table_controls"pfi><"table_wrapper"t>',
     "sPaginationType": "bootstrap",
     "fnServerData": convertData(table_name, column_names),
-    "fnRowCallback": prettifyRow,
     "fnInitComplete": function(oSettings){
       if (oSettings.aoColumns.length > 30){
         // Remove search box if there are so many columns the ajax request
