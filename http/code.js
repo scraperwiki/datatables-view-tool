@@ -231,6 +231,7 @@ var constructDataTable = function(i, table_name) {
   thead += '</tr></thead>'
   $t.append(thead)
 
+  // Show less rows the more columns there are (for large tables to load quicker)
   var num_columns = column_names.length
   console.log("num_columns", num_columns)
   var rows_to_show = 500
