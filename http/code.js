@@ -144,10 +144,8 @@ var convertData = function(table_name, column_names) {
     }
     var where = ""
     if (params.sSearch) {
-      // XXX no idea if this bog standard Javascript escape really does what we want with SQL databases.
-      // There's no security risk (as endpoint is sandboxed). There could be user experience pain though.
-      var search = "'%" + escape(params.sSearch.toLowerCase()) + "%'"
-      where = " where " + _.map(column_names, function(n) { return "lower(" + escapeSQL(n) + ") like " + search }).join(" or ")
+      var search = "'%" + params.sSearch.toLowerCase().replace("%", "$%").replace("_", "$_").replace("$", "$$") + "%'"
+      where = " where " + _.map(column_names, function(n) { return "lower(" + escapeSQL(n) + ") like " + search + " escape '$'"}).join(" or ")
       if (where.length > 1500) {
         scraperwiki.alert("Filtering is unavailable.", "Your dataset has too many columns")
         $(".search-query").val("").trigger("keyup")
