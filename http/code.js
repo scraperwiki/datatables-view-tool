@@ -290,6 +290,7 @@ var constructDataTable = function(i, table_name) {
 // 'tables' should be a list of table names.
 // 'active_table' should be the one you want to appear selected.
 var constructTabs = function(tables, active_table){
+  var underscoreTables = []
   var $ul = $('<ul>').addClass('nav nav-tabs').appendTo('body')
   $.each(tables, function(i, table_name){
     var li = '<li id="tab_' + i + '">'
@@ -298,14 +299,23 @@ var constructTabs = function(tables, active_table){
       currentActiveTable = table_name
       currentActiveTableIndex = i
     }
-    var a = '<a href="#"'+ ( table_name.slice(0,1)=='_' ? ' class=""' : '' ) +'>' + table_name + '</a>'
-    $(li).append(a).bind('click', function(e){
+    var $a = $('<a href="#">' + table_name + '</a>')
+    var $li = $(li).append($a).bind('click', function(e){
       e.preventDefault()
       $(this).addClass('active').siblings('.active').removeClass('active')
       currentActiveTable = table_name
       currentActiveTableIndex = i
       constructDataTable(i, table_name)
-    }).appendTo($ul)
+    })
+    if(table_name.slice(0,1)=='_'){
+      $a.addClass('muted')
+      underscoreTables.push($li)
+    } else {
+      $ul.append($li)
+    }
+  })
+  $.each(underscoreTables, function(i, $li){
+    $ul.append($li)
   })
 }
 
