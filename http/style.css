@@ -106,13 +106,13 @@ div.problem {
 
 .dataTables_processing {
   position: fixed;
-  top: 0;
+  top: 88px;
   right: 0;
   bottom: 0;
   left: 0;
   z-index: 9000;
   background: #fff url(img/loader.gif) center center no-repeat;
-  background-color: rgba(255,255,255,0.9);
+  background-color: rgba(255,255,255,0.8);
   text-indent: -9000px;
 }
 
