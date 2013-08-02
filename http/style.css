@@ -56,10 +56,9 @@ ul.nav li:first-child a {
   margin: 0;
 }
 
-.dataTables_filter {
+.input-append {
   float: right;
   margin-top: 5px;
-  min-width: 250px;
 }
 
 .dataTables_info {
@@ -70,10 +69,6 @@ ul.nav li:first-child a {
 .dataTables_paginate {
   float: left;
   margin: 7px 0 0 0;
-}
-
-.dataTables_filter label {
-  display: none;
 }
 
 .table th, .table td {

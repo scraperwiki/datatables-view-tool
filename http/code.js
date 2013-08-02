@@ -247,7 +247,7 @@ var constructDataTable = function(i, table_name) {
   console.log("rows_to_show", rows_to_show)
 
   // Fill in the datatables object
-  $t.dataTable({
+  window.currentTable = $t.dataTable({
     "bProcessing": true,
     "bServerSide": true,
     "bDeferRender": true,
@@ -255,18 +255,26 @@ var constructDataTable = function(i, table_name) {
     "bFilter": true,
     "iDisplayLength": rows_to_show,
     "bScrollCollapse": true,
-    "sDom": 'r<"table_controls"pfi><"table_wrapper"t>',
+    "sDom": 'r<"table_controls"p<"form-search"<"input-append">>i><"table_wrapper"t>',
     "sPaginationType": "bootstrap",
     "fnServerData": convertData(table_name, column_names),
     "fnInitComplete": function(oSettings){
       if (oSettings.aoColumns.length > 30){
         // Remove search box if there are so many columns the ajax request
         // would cause a 414 Request URI Too Large error on wide datasets
-        $('#table_' + i + ' .dataTables_filter').empty()
+        $('#table_' + i + ' .input-append').empty()
       } else {
-        // Otherwise really hackily replace their rubbish search input with a nicer one
-        var $copy = $('.dataTables_filter label input').clone(true).addClass('search-query')
-        $('#table_' + i + ' .dataTables_filter').html($copy)
+        // Otherwise, append search box and handle clicks / enter key
+        var $btn = $('<button class="btn">Search</button>').on('click', function(){
+          searchTerm = $(this).prev().val()
+          window.currentTable.fnFilter(searchTerm)
+        })
+        var $input = $('<input type="search" class="input-medium search-query">').on('keypress', function(e){
+          if (e.which === 13) {
+            $(this).next().trigger('click')
+          }
+        }).val(oSettings.oLoadedState.oSearch.sSearch)
+        $('#table_' + i + ' .input-append').html($input).append($btn)
       }
     },
     "bStateSave": true,
