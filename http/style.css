@@ -8,8 +8,18 @@ html, body {
 ul.nav {
   padding-top: 10px;
 }
+
 ul.nav li:first-child a {
   margin-left: 10px;
+}
+
+.nav-tabs > li > a.muted {
+  color: #D1E0E7;
+}
+
+.nav-tabs > li > a.muted:hover,
+.nav-tabs > li.active > a.muted {
+  color: #92B4C4;
 }
 
 .table_controls {
