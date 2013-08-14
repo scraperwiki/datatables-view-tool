@@ -286,7 +286,7 @@ var constructDataTable = function(i, table_name) {
   })
 }
 
-// Create and insert spreadsheet-like tab bar at bottom of page.
+// Create and insert spreadsheet-like tab bar at top of page.
 // 'tables' should be a list of table names.
 // 'active_table' should be the one you want to appear selected.
 var constructTabs = function(tables, active_table){
@@ -309,12 +309,7 @@ var constructTabs = function(tables, active_table){
     })
     if(table_name.slice(0,1)=='_'){
       $a.addClass('muted')
-      underscoreTables.push($li)
-    } else {
-      $ul.append($li)
     }
-  })
-  $.each(underscoreTables, function(i, $li){
     $ul.append($li)
   })
 }
@@ -326,6 +321,20 @@ var constructDataTables = function(first_table_name) {
   }
   constructTabs(tables, first_table_name)
   $("#tab_" + currentActiveTableIndex).trigger('click')
+}
+
+// Get table names in the right order, ready for display
+var filter_and_sort_tables = function(messy_table_names) {
+  // Filter out tables starting with double underscore
+  nice_tables = _.reject(messy_table_names, function(t){
+    return t.slice(0,2) == '__'
+  })
+  // Put tables beginning with a single underscore at the end
+  return _.reject(nice_tables, function(t){
+    return t.slice(0,1) == '_'
+  }).concat(_.filter(nice_tables, function(t){
+    return t.slice(0,1) == '_'
+  }))
 }
 
 // Main entry point, make the data table
@@ -343,12 +352,7 @@ $(function(){
     function (cb) {
       scraperwiki.sql.meta(function(newMeta) {
         meta = newMeta
-        tables = _.keys(meta.table)
-        // filter out tables starting with double underscore
-        // (this tool completely ignores such tables)
-        tables = _.reject(tables, function(tableName){
-          return tableName.slice(0,2) == '__'
-        })
+        tables = filter_and_sort_tables(_.keys(meta.table))
         cb()
       }, handle_ajax_error)
     },
