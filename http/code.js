@@ -110,7 +110,7 @@ var escapeSQL = function(column_name) {
 }
 var escapeshell = function(cmd) {
     return "'"+cmd.replace(/'/g,"'\\''")+"'";
-};
+}
 
 // Function to map JSON data between DataTables format and ScraperWiki's SQL endpoint format.
 // It returns a function for the fnServerData parameter
@@ -233,7 +233,6 @@ var constructDataTable = function(i, table_name) {
 
   // Show less rows the more columns there are (for large tables to load quicker)
   var num_columns = column_names.length
-  console.log("num_columns", num_columns)
   var rows_to_show = 500
   if (num_columns >= 10) {
     rows_to_show = 250
@@ -244,7 +243,6 @@ var constructDataTable = function(i, table_name) {
   if (num_columns >= 40) {
     rows_to_show = 50
   }
-  console.log("rows_to_show", rows_to_show)
 
   // Fill in the datatables object
   window.currentTable = $t.dataTable({
