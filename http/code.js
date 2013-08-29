@@ -305,7 +305,7 @@ var constructTabs = function(tables, active_table){
       currentActiveTableIndex = i
       constructDataTable(i, table_name)
     })
-    if(table_name.slice(0,1)=='_'){
+    if(isDevTable(table_name)){
       $a.addClass('muted')
       underscoreTables.push($li)
     } else {
@@ -317,10 +317,26 @@ var constructTabs = function(tables, active_table){
   })
 }
 
+// Short functions to weed out non-user-facing tables
+var isHiddenTable = function(table_name){
+  return table_name.slice(0,2)=='__'
+}
+var isDevTable = function(table_name){
+  return table_name.slice(0,1)=='_' && !isHiddenTable(table_name)
+}
+
 // Make all the DataTables and their tabs
 var constructDataTables = function(first_table_name) {
   if ( ! first_table_name || ! first_table_name in _.values(tables) ) {
+    // set a sensible default (in the case that there are no non-underscore tables)
     first_table_name = tables[0]
+    // find the first non-underscore table
+    $.each(tables, function(i, table_name){
+      if(!isDevTable(table_name)){
+        first_table_name = table_name
+        return true
+      }
+    })
   }
   constructTabs(tables, first_table_name)
   $("#tab_" + currentActiveTableIndex).trigger('click')
@@ -344,9 +360,7 @@ $(function(){
         tables = _.keys(meta.table)
         // filter out tables starting with double underscore
         // (this tool completely ignores such tables)
-        tables = _.reject(tables, function(tableName){
-          return tableName.slice(0,2) == '__'
-        })
+        tables = _.reject(tables, isHiddenTable)
         cb()
       }, handle_ajax_error)
     },
@@ -359,6 +373,11 @@ $(function(){
       $('body > .dataTables_processing').remove()
       if(tables.length){
           currentActiveTable = allSettings['active']
+          if(isDevTable(currentActiveTable)){
+            // we don't want to automatically switch to _ tables
+            // so we pretend the state was never saved
+            currentActiveTable = null
+          }
           constructDataTables(currentActiveTable)
       } else {
         $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
