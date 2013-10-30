@@ -4,11 +4,11 @@ var allSettings
 
 // Handle AJAX type errors
 var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
-  $('body > .dataTables_processing').remove()
+  $('#content > .dataTables_processing').remove()
   if(jqXHR.responseText.match(/database file does not exist/) != null){
-    $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
+    $('#content').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
   } else if(jqXHR.responseText.match(/Gateway Time-out/) != null){
-    $('body').html('<div class="problem"><h4>This dataset is too big.</h4><p>Well this is embarassing. Your dataset is too big for the <em>View in a table tool</em> to display.</p><p>Try downloading it as a spreadsheet.</p></div>')
+    $('#content').html('<div class="problem"><h4>Well this is embarassing.</h4><p>Your dataset is too big to display.</br>Try downloading it as a spreadsheet.</p></div>')
   } else {
     scraperwiki.alert(errorThrown, jqXHR.responseText, "error")
   }
@@ -20,6 +20,16 @@ function htmlEncode(value) {
 }
 function htmlDecode(value) {
   return $('<div/>').html(value).text();
+}
+
+function pluralise(number, plural_suffix, singular_suffix){
+  var plural_suffix = plural_suffix || 's';
+  var singular_suffix = singular_suffix || '';
+  if(number == 1){
+    return singular_suffix;
+  } else {
+    return plural_suffix;
+  }
 }
 
 // Links clickable etc. in one row of data
@@ -209,7 +219,7 @@ var constructDataTable = function(i, table_name) {
   var $outer = $("#" + id)
   if ($outer.length == 0) {
     $outer = $('<div class="maintable" id="table_' + i + '"> <table class="table table-striped table-bordered innertable display"></table> </div>')
-    $('body').append($outer)
+    $('#content').append($outer)
   } else {
     $outer.show()
     return
@@ -288,28 +298,38 @@ var constructDataTable = function(i, table_name) {
 // 'tables' should be a list of table names.
 // 'active_table' should be the one you want to appear selected.
 var constructTabs = function(tables, active_table){
-  var underscoreTables = []
-  var $ul = $('<ul>').addClass('nav nav-tabs').appendTo('body')
-  $.each(tables, function(i, table_name){
-    var li = '<li id="tab_' + i + '">'
-    if (table_name == active_table){
-      var li = '<li id="tab_' + i + '" class="active">'
-      currentActiveTable = table_name
-      currentActiveTableIndex = i
-    }
-    var $a = $('<a href="#">' + table_name + '</a>')
-    var $li = $(li).append($a).bind('click', function(e){
-      e.preventDefault()
-      $(this).addClass('active').siblings('.active').removeClass('active')
-      currentActiveTable = table_name
-      currentActiveTableIndex = i
-      constructDataTable(i, table_name)
+  var $ul = $('#table-sidebar > ul.nav')
+  $ul.empty()
+  var publicTables = _.filter(tables, isPublicTable)
+  var devTables = _.filter(tables, isDevTable)
+  if(publicTables.length){
+    var subtitle = publicTables.length + ' Table' + pluralise(publicTables.length)
+    $ul.append('<li class="nav-header">' + subtitle + '</li>')
+    $.each(publicTables, function(i, table_name){
+      $ul.append(constructTab(i, table_name, active_table))
     })
-    if(isDevTable(table_name)){
-      $a.addClass('muted')
-    }
-    $ul.append($li)
-  })
+  }
+  if(devTables.length){
+    var subtitle = devTables.length + ' Developer Table' + pluralise(devTables.length)
+    $ul.append('<li class="nav-header">' + subtitle + '</li>')
+    $.each(devTables, function(i, table_name){
+      $ul.append(constructTab(i, table_name, active_table))
+    })
+  }
+}
+
+var constructTab = function(table_index, table_name, active_table){
+  var $li = $('<li>').attr('id', 'tab_' + table_index)
+  if (table_name == active_table){
+    $li.addClass('active')
+    currentActiveTable = table_name
+    currentActiveTableIndex = table_index
+  }
+  var $a = $('<a>').appendTo($li)
+  $a.text(table_name)
+  $a.attr('data-table-index', table_index)
+  $a.attr('data-table-name', table_name)
+  return $li
 }
 
 // Short functions to weed out non-user-facing tables
@@ -318,6 +338,9 @@ var isHiddenTable = function(table_name){
 }
 var isDevTable = function(table_name){
   return table_name.slice(0,1)=='_' && !isHiddenTable(table_name)
+}
+var isPublicTable = function(table_name){
+  return table_name.slice(0,1)!='_'
 }
 
 // Make all the DataTables and their tabs
@@ -333,8 +356,10 @@ var constructDataTables = function(first_table_name) {
       }
     })
   }
+  // Populate the sidebar
   constructTabs(tables, first_table_name)
-  $("#tab_" + currentActiveTableIndex).trigger('click')
+  // Activate one of the sidebar tables (This is really hacky)
+  $('a[data-table-index="'+currentActiveTableIndex+'"]').trigger('click')
 }
 
 // Get table names in the right order, ready for display
@@ -370,7 +395,7 @@ $(function(){
       })
     }],
     function (err, results) {
-      $('body > .dataTables_processing').remove()
+      $('#content > .dataTables_processing').remove()
       if(tables.length){
           currentActiveTable = allSettings['active']
           if(isDevTable(currentActiveTable)){
@@ -380,10 +405,20 @@ $(function(){
           }
           constructDataTables(currentActiveTable)
       } else {
-        $('body').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
+        $('#content').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
       }
     }
    )
+
+   $(document).on('click', '#table-sidebar li a', function(){
+     var $a = $(this)
+     var $li = $a.parent()
+     $li.addClass('active').siblings('.active').removeClass('active')
+     currentActiveTable = $a.attr('data-table-name')
+     currentActiveTableIndex = $a.attr('data-table-index')
+     constructDataTable(currentActiveTableIndex, currentActiveTable)
+   })
+
 });
 
 
