@@ -345,7 +345,9 @@ var constructTabs = function(active_table){
     var subtitle = devTables.length + ' Developer Table' + pluralise(devTables.length)
     $ul.append('<li class="nav-header">' + subtitle + '</li>')
     $.each(devTables, function(i, table_name){
-      $ul.append(constructTab('table', window.tables.indexOf(table_name), table_name, active_table))
+      var $li = constructTab('table', window.tables.indexOf(table_name), table_name, active_table)
+      $li.addClass('developer')
+      $ul.append($li)
     })
   }
 }
