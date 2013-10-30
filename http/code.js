@@ -376,7 +376,7 @@ $(function(){
           if(isDevTable(currentActiveTable)){
             // we don't want to automatically switch to _ tables
             // so we pretend the state was never saved
-            currentActiveTable = null
+            currentActiveTable = undefined
           }
           constructDataTables(currentActiveTable)
       } else {
