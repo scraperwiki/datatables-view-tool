@@ -25,6 +25,7 @@ html, body {
 
 #table-sidebar ul {
   margin: 8px 0;
+  font-size: 14px;
 }
 
 #table-sidebar li a {
