@@ -70,10 +70,10 @@ var prettifyCell = function( content ) {
 
 // Save known state of all tabs, and active tab
 var saveState = function (oSettings, oData) {
-  allSettings['active'] = currentActiveTable
-  allSettings['tables'][currentActiveTable] = oData
+  window.allSettings['active'] = window.currentActiveTable
+  window.allSettings['tables'][window.currentActiveTable] = oData
 
-  var j = JSON.stringify(allSettings)
+  var j = JSON.stringify(window.allSettings)
   var fname = escapeshell("allSettings.json")
   scraperwiki.exec("echo -n <<ENDOFJSON >" + fname + ".new.$$ " + escapeshell(j) + "\nENDOFJSON\n" +
     "mv " + fname + ".new.$$ " + fname,
@@ -87,8 +87,8 @@ var saveState = function (oSettings, oData) {
 
 // Restore column status from the view's box's filesystem
 var loadState = function (oSettings) {
-  if (currentActiveTable in allSettings['tables']) {
-    oData = allSettings['tables'][currentActiveTable]
+  if (window.currentActiveTable in window.allSettings['tables']) {
+    oData = window.allSettings['tables'][window.currentActiveTable]
     // force the display length we calculated was suitable when first making the table
     // (rather than using the saved setting)
     oData.iLength = oSettings._iDisplayLength
@@ -105,9 +105,9 @@ var loadAllSettings = function(callback) {
   scraperwiki.exec("touch allSettings.json; cat allSettings.json" ,
     function(content) {
       try {
-        allSettings = JSON.parse(content)
+        window.allSettings = JSON.parse(content)
       } catch (e) {
-        allSettings = { tables: {}, active: null }
+        window.allSettings = { tables: {}, active: null }
       }
       callback()
     }, handle_ajax_error
@@ -119,7 +119,7 @@ var escapeSQL = function(column_name) {
   return '"' + column_name.replace(/"/g, '""') + '"'
 }
 var escapeshell = function(cmd) {
-    return "'"+cmd.replace(/'/g,"'\\''")+"'";
+  return "'" + cmd.replace(/'/g,"'\\''") + "'";
 }
 
 // Function to map JSON data between DataTables format and ScraperWiki's SQL endpoint format.
@@ -182,13 +182,13 @@ var convertData = function(table_name, column_names) {
         oSettings.jqXHR = $.ajax( {
           "dataType": 'json',
           "type": "GET",
-          "url": sqliteEndpoint,
+          "url": window.sqliteEndpoint,
           "data": { q: query },
           "success": function ( response ) {
             // ScraperWiki returns a list of dicts. This converts it to a list of lists.
             for (var i=0;i<response.length;i++) {
               var row = []
-              _.each(meta.table[table_name].columnNames, function(col) {
+              _.each(window.meta.table[table_name].columnNames, function(col) {
                 row.push(prettifyCell(response[i][col]))
               })
               rows.push(row)
@@ -227,14 +227,14 @@ var constructDataTable = function(i, table_name) {
   var $t = $outer.find("table")
 
   // Find out the column names
-  column_names = meta.table[table_name].columnNames
+  column_names = window.meta.table[table_name].columnNames
   if (column_names.length == 0) {
     scraperwiki.alert("No columns in the table", jqXHR.responseText)
     return
   }
 
   // Make the column headings
-      var thead = '<thead><tr>'
+  var thead = '<thead><tr>'
   _.each(column_names, function(column_name) {
     thead += '<th>' + column_name + '</th>'
   })
@@ -325,8 +325,8 @@ var constructTab = function(table_index, table_name, active_table){
   var $li = $('<li>').attr('id', 'tab_' + table_index)
   if (table_name == active_table){
     $li.addClass('active')
-    currentActiveTable = table_name
-    currentActiveTableIndex = table_index
+    window.currentActiveTable = table_name
+    window.currentActiveTableIndex = table_index
   }
   var $a = $('<a>').appendTo($li)
   $a.text(table_name)
@@ -348,11 +348,11 @@ var isPublicTable = function(table_name){
 
 // Make all the DataTables and their tabs
 var constructDataTables = function(first_table_name) {
-  if ( ! first_table_name || ! first_table_name in _.values(tables) ) {
+  if ( ! first_table_name || ! first_table_name in _.values(window.tables) ) {
     // set a sensible default (in the case that there are no non-underscore tables)
-    first_table_name = tables[0]
+    first_table_name = window.tables[0]
     // find the first non-underscore table
-    $.each(tables, function(i, table_name){
+    $.each(window.tables, function(i, table_name){
       if(!isDevTable(table_name)){
         first_table_name = table_name
         return true
@@ -360,9 +360,9 @@ var constructDataTables = function(first_table_name) {
     })
   }
   // Populate the sidebar
-  constructTabs(tables, first_table_name)
+  constructTabs(window.tables, first_table_name)
   // Activate one of the sidebar tables (This is really hacky)
-  $('a[data-table-index="'+currentActiveTableIndex+'"]').trigger('click')
+  $('a[data-table-index="' + window.currentActiveTableIndex + '"]').trigger('click')
 }
 
 // Get table names in the right order, ready for display
@@ -373,22 +373,23 @@ var filter_and_sort_tables = function(messy_table_names) {
   return _.reject(nice_tables, isDevTable).concat(_.filter(nice_tables, isDevTable))
 }
 
-// Main entry point, make the data table
+// Main entry point
 var settings
 var sqliteEndpoint
 var tables
 var currentActiveTable
 var currentActiveTableIndex
 var meta
+
 $(function(){
-  settings = scraperwiki.readSettings()
-  sqliteEndpoint = settings.target.url + '/sqlite'
+  window.settings = scraperwiki.readSettings()
+  window.sqliteEndpoint = window.settings.target.url + '/sqlite'
 
   async.parallel([
     function (cb) {
       scraperwiki.sql.meta(function(newMeta) {
-        meta = newMeta
-        tables = filter_and_sort_tables(_.keys(meta.table))
+        window.meta = newMeta
+        window.tables = filter_and_sort_tables(_.keys(window.meta.table))
         cb()
       }, handle_ajax_error)
     },
@@ -399,14 +400,14 @@ $(function(){
     }],
     function (err, results) {
       $('#content > .dataTables_processing').remove()
-      if(tables.length){
-          currentActiveTable = allSettings['active']
-          if(isDevTable(currentActiveTable)){
+      if(window.tables.length){
+          window.currentActiveTable = window.allSettings['active']
+          if(isDevTable(window.currentActiveTable)){
             // we don't want to automatically switch to _ tables
             // so we pretend the state was never saved
-            currentActiveTable = undefined
+            window.currentActiveTable = undefined
           }
-          constructDataTables(currentActiveTable)
+          constructDataTables(window.currentActiveTable)
       } else {
         $('#content').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
       }
@@ -417,9 +418,9 @@ $(function(){
      var $a = $(this)
      var $li = $a.parent()
      $li.addClass('active').siblings('.active').removeClass('active')
-     currentActiveTable = $a.attr('data-table-name')
-     currentActiveTableIndex = $a.attr('data-table-index')
-     constructDataTable(currentActiveTableIndex, currentActiveTable)
+     window.currentActiveTable = $a.attr('data-table-name')
+     window.currentActiveTableIndex = $a.attr('data-table-index')
+     constructDataTable(window.currentActiveTableIndex, window.currentActiveTable)
    })
 
 });
