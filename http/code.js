@@ -281,7 +281,10 @@ var constructDataTable = function(i, table_name) {
           if (e.which === 13) {
             $(this).next().trigger('click')
           }
-        }).val(oSettings.oLoadedState.oSearch.sSearch)
+        })
+        if(oSettings.oLoadedState != null){
+          $input.val(oSettings.oLoadedState.oSearch.sSearch)
+        }
         $('#table_' + i + ' .input-append').html($input).append($btn)
       }
     },
