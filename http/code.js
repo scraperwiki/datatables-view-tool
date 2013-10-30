@@ -1,6 +1,6 @@
 // datatables-tool.js
 
-var allSettings 
+var allSettings
 
 // Handle AJAX type errors
 var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
@@ -369,7 +369,7 @@ $(function(){
         cb()
       })
     }],
-    function (err, results) { 
+    function (err, results) {
       $('body > .dataTables_processing').remove()
       if(tables.length){
           currentActiveTable = allSettings['active']
