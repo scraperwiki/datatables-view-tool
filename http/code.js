@@ -6,6 +6,7 @@ var allSettings
 var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
   $('#content > .dataTables_processing').remove()
   if(jqXHR.responseText.match(/database file does not exist/) != null){
+    $('#table-sidebar-loading').text('No tables')
     $('#content').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
   } else if(jqXHR.responseText.match(/Gateway Time-out/) != null){
     $('#content').html('<div class="problem"><h4>Well this is embarassing.</h4><p>Your dataset is too big to display.</br>Try downloading it as a spreadsheet.</p></div>')
@@ -453,6 +454,7 @@ $(function(){
           }
           constructDataTables(window.currentActiveTable)
       } else {
+        $('#table-sidebar-loading').text('No tables')
         $('#content').html('<div class="problem"><h4>This dataset is empty.</h4><p>Once your dataset contains data,<br/>it will show up in a table here.</p></div>')
       }
     }
