@@ -9,7 +9,7 @@ html, body {
 /* Structural elements */
 
 #table-sidebar {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
@@ -22,6 +22,7 @@ html, body {
   border-left: none;
   border-top: none;
   border-bottom: none;
+  overflow-y: auto;
 }
 
 #table-sidebar ul {
