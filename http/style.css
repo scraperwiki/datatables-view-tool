@@ -144,6 +144,10 @@ th:first-child {
   line-height: 22px;
 }
 
+td.dataTables_empty {
+  text-align: center;
+}
+
 img.inline {
   max-height: 96px;
 }
