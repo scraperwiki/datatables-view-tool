@@ -309,14 +309,14 @@ var constructTabs = function(tables, active_table){
     var subtitle = publicTables.length + ' Table' + pluralise(publicTables.length)
     $ul.append('<li class="nav-header">' + subtitle + '</li>')
     $.each(publicTables, function(i, table_name){
-      $ul.append(constructTab(i, table_name, active_table))
+      $ul.append(constructTab(window.tables.indexOf(table_name), table_name, active_table))
     })
   }
   if(devTables.length){
     var subtitle = devTables.length + ' Developer Table' + pluralise(devTables.length)
     $ul.append('<li class="nav-header">' + subtitle + '</li>')
     $.each(devTables, function(i, table_name){
-      $ul.append(constructTab(i, table_name, active_table))
+      $ul.append(constructTab(window.tables.indexOf(table_name), table_name, active_table))
     })
   }
 }
