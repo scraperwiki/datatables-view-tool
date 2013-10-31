@@ -390,20 +390,20 @@ var isPublicTable = function(table_name){
 
 // Make all the DataTables and their tabs
 var constructDataTables = function(first_table_name) {
-  if ( ! first_table_name || ! first_table_name in _.values(window.tables) ) {
-    // set a sensible default (in the case that there are no non-underscore tables)
-    first_table_name = window.tables[0]
-    // find the first non-underscore table
-    $.each(window.tables, function(i, table_name){
-      if(!isDevTable(table_name)){
-        first_table_name = table_name
-        return true
-      }
-    })
+  var all_tables_and_grids = window.tables.concat(window.grids)
+  if ( ! first_table_name || ! (first_table_name in _.values(all_tables_and_grids)) ) {
+    // Get the first non underscore table if there is one, or the first
+    // table overall
+    first_table_name = _.reject(all_tables_and_grids, function(table_name) {
+        return isDevTable(table_name)
+    })[0] || window.tables[0]
   }
+
   // Populate the sidebar
   constructTabs(first_table_name)
+
   // Activate one of the sidebar tables (This is really hacky)
+  // These global variables are set in constructTab
   $('a[data-table-index="' + window.currentActiveTableIndex + '"][data-table-type="' + window.currentActiveTableType + '"][data-table-name="' + window.currentActiveTable + '"]').trigger('click')
 }
 
