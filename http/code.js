@@ -447,7 +447,7 @@ $(function(){
       $('#content > .dataTables_processing').remove()
       if(window.tables.length){
           window.currentActiveTable = window.allSettings['active']
-          if(isDevTable(window.currentActiveTable)){
+          if(window.currentActiveTable && isDevTable(window.currentActiveTable)){
             // we don't want to automatically switch to _ tables
             // so we pretend the state was never saved
             window.currentActiveTable = undefined
