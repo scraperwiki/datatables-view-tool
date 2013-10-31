@@ -434,7 +434,10 @@ $(function(){
       scraperwiki.sql.meta(function(newMeta) {
         window.meta = newMeta
         window.tables = filter_and_sort_tables(_.keys(window.meta.table))
-        window.grids = _.keys(window.meta.grid)
+        var unsorted_grids = _.keys(window.meta.grid)
+        window.grids = _.sortBy(unsorted_grids, function(grid_checksum) {
+          return window.meta.grid[grid_checksum]['number']
+        })
         cb()
       }, handle_ajax_error)
     },
