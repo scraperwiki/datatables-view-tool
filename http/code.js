@@ -391,7 +391,7 @@ var isPublicTable = function(table_name){
 // Make all the DataTables and their tabs
 var constructDataTables = function(first_table_name) {
   var all_tables_and_grids = window.tables.concat(window.grids)
-  if ( ! first_table_name || ! (first_table_name in _.values(all_tables_and_grids)) ) {
+  if ( ! first_table_name || ! _.contains(all_tables_and_grids, first_table_name) ) {
     // Get the first non underscore table if there is one, or the first
     // table overall
     first_table_name = _.reject(all_tables_and_grids, function(table_name) {
