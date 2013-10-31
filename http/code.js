@@ -344,7 +344,7 @@ var constructTabs = function(active_table){
   }
   if(devTables.length){
     var subtitle = devTables.length + ' Developer Table' + pluralise(devTables.length)
-    $ul.append('<li class="nav-header">' + subtitle + '</li>')
+    $ul.append('<li class="nav-header" id="developer-tables">' + subtitle + '</li>')
     $.each(devTables, function(i, table_name){
       var $li = constructTab('table', window.tables.indexOf(table_name), table_name, active_table)
       $li.addClass('developer')
@@ -402,6 +402,10 @@ var constructDataTables = function(first_table_name) {
   // Populate the sidebar
   constructTabs(first_table_name)
 
+  if(isDevTable(first_table_name)) {
+    toggleDevTables()
+  }
+
   // Activate one of the sidebar tables (This is really hacky)
   // These global variables are set in constructTab
   $('a[data-table-index="' + window.currentActiveTableIndex + '"][data-table-type="' + window.currentActiveTableType + '"][data-table-name="' + window.currentActiveTable + '"]').trigger('click')
@@ -413,6 +417,10 @@ var filter_and_sort_tables = function(messy_table_names) {
   nice_tables = _.reject(messy_table_names, isHiddenTable)
   // Put tables beginning with a single underscore at the end
   return _.reject(nice_tables, isDevTable).concat(_.filter(nice_tables, isDevTable))
+}
+
+var toggleDevTables = function() {
+    $('#developer-tables').nextAll().toggle()
 }
 
 // Main entry point
@@ -473,6 +481,7 @@ $(function(){
      constructDataTable(window.currentActiveTableType, window.currentActiveTableIndex, window.currentActiveTable)
    })
 
+  $(document).on('click', '#developer-tables', toggleDevTables)
 });
 
 

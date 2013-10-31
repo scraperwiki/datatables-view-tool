@@ -34,6 +34,18 @@ html, body {
   cursor: pointer;
 }
 
+#developer-tables {
+  cursor: pointer;
+}
+
+#developer-tables:hover {
+  color: #666;
+}
+
+.developer {
+  display: none;
+}
+
 .developer a {
   color: #9AB1BD;
 }
