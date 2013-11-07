@@ -378,66 +378,69 @@ var constructDataTable = function(table_type, table_index, table_name) {
 // 'tables' should be a list of table names.
 // 'active_table' should be the one you want to appear selected.
 var constructTabs = function(active_table) {
-  var $ul = $('#table-sidebar > ul.nav')
-  $ul.empty()
+  var $nav = $('nav').empty()
 
-  var publicTables = _.filter(window.tables, isPublicTable)
-  var devTables = _.filter(window.tables, isDevTable)
+  // Remove "loading tables..."
+  $('#table-sidebar > ul.nav').hide()
 
-  if (publicTables.length) {
-    var subtitle = publicTables.length + ' Table' + pluralise(publicTables.length)
-    $ul.append('<li class="nav-header">' + subtitle + '</li>')
-    $.each(publicTables, function(i, table_name) {
-      $ul.append(constructTab('table', window.tables.indexOf(table_name), table_name, active_table))
-    })
-  }
+  var constructTab = function(type, table_index, table_name, active_table) {
+    var $li = $('<li>')
 
-  if (window.grids.length) {
-    var subtitle = window.grids.length + ' Unstructured table' + pluralise(window.grids.length)
-    $ul.append('<li class="nav-header">' + subtitle + '<li>')
-    $.each(window.grids, function(i, grid_checksum) {
-      $ul.append(constructTab('grid', window.grids.indexOf(grid_checksum), grid_checksum, active_table))
-    })
-  }
+    if (table_name == active_table) {
+      $li.addClass('active')
+      window.currentActiveTable = table_name
+      window.currentActiveTableIndex = table_index
+      window.currentActiveTableType = type
+    }
 
-  if (devTables.length) {
-    var subtitle = devTables.length + ' Developer Table' + pluralise(devTables.length)
-    $ul.append('<li class="nav-header" id="developer-tables">' + subtitle + '</li>')
-    $.each(devTables, function(i, table_name) {
-      var $li = constructTab('table', window.tables.indexOf(table_name), table_name, active_table)
-      $li.addClass('developer')
-      $ul.append($li)
-    })
-  }
-}
+    var $a = $('<a>').appendTo($li)
 
-var constructTab = function(type, table_index, table_name, active_table) {
-  var $li = $('<li>')
-
-  if (table_name == active_table) {
-    $li.addClass('active')
-    window.currentActiveTable = table_name
-    window.currentActiveTableIndex = table_index
-    window.currentActiveTableType = type
-  }
-
-  var $a = $('<a>').appendTo($li)
-
-  if (type == 'grid') {
-    if ('title' in window.meta.grid[table_name]) {
-      $a.text(window.meta.grid[table_name]['title'])
+    if (type == 'grid') {
+      if ('title' in window.meta.grid[table_name]) {
+        $a.text(window.meta.grid[table_name]['title'])
+      } else {
+        $a.text(table_name)
+      }
     } else {
       $a.text(table_name)
     }
-  } else {
-    $a.text(table_name)
+
+    $a.attr('data-table-index', table_index)
+    $a.attr('data-table-name', table_name)
+    $a.attr('data-table-type', type)
+
+    return $li
   }
 
-  $a.attr('data-table-index', table_index)
-  $a.attr('data-table-name', table_name)
-  $a.attr('data-table-type', type)
+  var populateTabs = function(tables, heading_name) {
+    if (tables.length == 0) {
+      return $([])
+    }
 
-  return $li
+    var subtitle = tables.length + ' ' + heading_name + pluralise(tables.length)
+    var $ul = $('<ul class="nav nav-list">')
+    $nav.append($ul)
+
+    $ul.append('<li class="nav-header">' + subtitle + '</li>')
+
+    $.each(tables, function(i, table_name) {
+      var i = window.tables.indexOf(table_name)
+      var tab = constructTab('table', i, table_name, active_table)
+      $ul.append(tab)
+    })
+
+    return $ul
+  }
+
+  var publicTables = _.filter(window.tables, isPublicTable)
+  populateTabs(publicTables, 'Table')
+
+  populateTabs(window.grids, 'Unstructured table')
+
+  var devTables = _.filter(window.tables, isDevTable)
+  var devUl = populateTabs(devTables, 'Developer table')
+  devUl.attr('id', 'developer-tables')
+  devUl.find('li').addClass('developer')
 }
 
 // Short functions to weed out non-user-facing tables
