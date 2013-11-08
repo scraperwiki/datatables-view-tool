@@ -1,8 +1,5 @@
 // datatables-tool.js
 
-var allSettings
-
-// Handle AJAX type errors
 var handle_ajax_error = function(jqXHR, textStatus, errorThrown) {
   $('#content > .dataTables_processing').remove()
   if (jqXHR.responseText.match(/database file does not exist/) != null) {
@@ -114,21 +111,6 @@ var loadState = function(oSettings) {
   }
 
   return oData
-}
-
-
-// Read active table from the box's filesystem and pass it on to callback
-var loadAllSettings = function(callback) {
-  var oData = false
-  scraperwiki.exec("touch allSettings.json; cat allSettings.json",
-    function(content) {
-      try {
-        window.allSettings = JSON.parse(content)
-      } catch (e) {
-        window.allSettings = { tables: {}, active: null, activeType: null }
-      }
-      callback()
-    }, handle_ajax_error)
 }
 
 // Escape identifiers
@@ -248,130 +230,178 @@ var convertData = function(table_name, column_names) {
 
 // Make one of the DataTables (in one tab)
 // 'table_type' should be either 'table' or 'grid'
-// 'table_index' should be the integer position of the datatable in the list of
-//               all tables/grids
-// 'table_name' is obviously the name of the active table/grid
-var constructDataTable = function(table_type, table_index, table_name) {
-  // Find or make the table
-  $(".maintable").hide()
+// 'table_index' should be the integer position of the datatable
+//               in the list of all tables/grids
+// 'table_name' is obviously the SQL table name, or the grid checksum
+var showTableOrGrid = function(table_type, table_index, table_name) {
 
+  // Special case: if we want a grid and we have an all_grids
+  if (table_type == 'grid' && $('#all_grids').length) {
+    hidePreviousTable()
+    $('#all_grids').show()
+
+    var table_y = $('#all_grids #' + table_name).position().top
+    var all_tables_padding = parseInt($('#all_grids').css('padding-top'))
+    $('#content').scrollTop(table_y - all_tables_padding)
+    $('#content').scrollspy({ offset: all_tables_padding + 1 })
+
+    return
+  }
+
+  if (table_type == 'grid') {
+    constructGrid(table_type, table_index, table_name)
+  } else {
+    constructDataTable(table_type, table_index, table_name)
+  }
+
+}
+
+var hidePreviousTable = function() {
+  $(".maintable:visible").hide()
+}
+
+
+// Given $table, a <table> element on the page,
+// AJAX in the contents of the required grid,
+// and put it in the page.
+var constructGrid = function(table_type, table_index, table_name) {
+
+  // Show table if it exists already
   var wrapper_id = table_type + "_" + table_index
   var $outer = $("#" + wrapper_id)
-
-  if ($outer.length == 0) {
-    $outer = $('<div class="maintable" id="' + wrapper_id + '">' +
-               '<table class="table table-striped table-bordered innertable display"></table>' +
-               '</div>')
-    $('#content').append($outer)
-
-  } else {
+  if($outer.length){
+    hidePreviousTable()
     $outer.show()
     return
   }
 
-  var $t = $outer.find("table")
+  // Table doesn't exist, so create it
+  var grid_meta = window.meta.grid[table_name]
+  if (grid_meta && grid_meta.url) {
 
-  if (table_type == 'grid') {
-    var grid_meta = window.meta.grid[table_name]
+    $.get(grid_meta.url).done(function(html) {
+      var $outer = $('<div class="maintable" id="' + wrapper_id + '">' +
+                     '<table class="table table-striped table-bordered innertable display"></table>' +
+                     '</div>').hide()
+      $('#content').append($outer)
 
-    // This is a grid! Bypass DataTables, and just ajax in the entire table element
-    if (grid_meta && grid_meta.url) {
-      $.get(grid_meta.url).done(function(html) {
+      var $table = $outer.find("table")
+      var innerHtml = $('<div>').html(html).find('table').html()
+      $table.html(innerHtml)
 
-        var innerHtml = $('<div>').html(html).find('table').html()
-        $t.html(innerHtml).removeClass('table-striped')
+      hidePreviousTable()
+      $outer.show()
 
-        saveState(null, null)
-      }).fail(handle_ajax_error)
-
-    } else {
-      scraperwiki.alert(
-        'This grid has no URL',
-        'We can&rsquo;t load the content of this grid. ' +
-        'Try clearing your data and importing again.',
-        'error')
-    }
+      saveState(null, null)
+    }).fail(handle_ajax_error)
 
   } else {
-
-    // This is a table! Find out the column names
-    column_names = window.meta.table[table_name].columnNames
-    if (column_names.length == 0) {
-      scraperwiki.alert("No columns in the table", jqXHR.responseText)
-      return
-    }
-
-    // Make the column headings
-    var thead = '<thead><tr>'
-    _.each(column_names, function(column_name) {
-      thead += '<th>' + column_name + '</th>'
-    })
-    thead += '</tr></thead>'
-    $t.append(thead)
-
-    // Show fewer rows the more columns there are (for large tables to load quicker)
-    var num_columns = column_names.length
-    var rows_to_show = 500
-    if (num_columns >= 10) {
-      rows_to_show = 250
-    }
-    if (num_columns >= 20) {
-      rows_to_show = 100
-    }
-    if (num_columns >= 40) {
-      rows_to_show = 50
-    }
-
-    var initComplete = function(oSettings) {
-      if (oSettings.aoColumns.length > 30) {
-        // Remove search box if there are so many columns the ajax request
-        // would cause a 414 Request URI Too Large error on wide datasets
-        $('#' + wrapper_id + ' .input-append').empty()
-
-      } else {
-        // Otherwise, append search box and handle clicks / enter key
-        var $btn = $('<button class="btn">Search</button>')
-        $btn.on('click', function() {
-          searchTerm = $(this).prev().val()
-          window.currentTable.fnFilter(searchTerm)
-        })
-
-        var $input = $('<input type="search" class="input-medium search-query">')
-        $input.on('keypress', function(e) {
-          if (e.which === 13) {
-            $(this).next().trigger('click')
-          }
-        })
-
-        if (oSettings.oLoadedState != null) {
-          $input.val(oSettings.oLoadedState.oSearch.sSearch)
-        }
-
-        $('#' + wrapper_id + ' .input-append').html($input).append($btn)
-      }
-    }
-
-    // Fill in the datatables object
-    window.currentTable = $t.dataTable({
-      "bProcessing": true,
-      "bServerSide": true,
-      "bDeferRender": true,
-      "bPaginate": true,
-      "bFilter": true,
-      "iDisplayLength": rows_to_show,
-      "bScrollCollapse": true,
-      "sDom": 'r<"table_controls"p<"form-search"<"input-append">>i><"table_wrapper"t>',
-      "sPaginationType": "bootstrap",
-      "fnServerData": convertData(table_name, column_names),
-      "fnInitComplete": initComplete,
-      "bStateSave": true,
-      "fnStateSave": saveState,
-      "fnStateLoad": loadState,
-      "oLanguage": {
-        "sEmptyTable": "This table is empty"
-       }
-    })
+    scraperwiki.alert(
+      'This grid has no URL',
+      'We can&rsquo;t load the content of this grid. ' +
+      'Try clearing your data and importing again.',
+      'error')
   }
+}
+
+// Given $table, a <table> element on the page,
+// fill the table with data and make it into an
+// interactive DataTables.js table.
+var constructDataTable = function(table_type, table_index, table_name) {
+
+  // Show table if it exists already
+  var wrapper_id = table_type + "_" + table_index
+  var $outer = $("#" + wrapper_id)
+  if($outer.length){
+    hidePreviousTable()
+    $outer.show()
+    return
+  }
+
+  // Table doesn't exist, so create it
+  var column_names = window.meta.table[table_name].columnNames
+  if (column_names.length == 0) {
+    scraperwiki.alert("No columns in the table", jqXHR.responseText)
+    return
+  }
+
+  hidePreviousTable()
+  var $outer = $('<div class="maintable" id="' + wrapper_id + '">' +
+                 '<table class="table table-striped table-bordered innertable display"></table>' +
+                 '</div>')
+  $('#content').append($outer)
+  var $table = $outer.find('table')
+
+  // Make the column headings
+  var thead = '<thead><tr>'
+  _.each(column_names, function(column_name) {
+    thead += '<th>' + column_name + '</th>'
+  })
+  thead += '</tr></thead>'
+  $table.append(thead)
+
+  // Show fewer rows the more columns there are (for large tables to load quicker)
+  var num_columns = column_names.length
+  var rows_to_show = 500
+  if (num_columns >= 10) {
+    rows_to_show = 250
+  }
+  if (num_columns >= 20) {
+    rows_to_show = 100
+  }
+  if (num_columns >= 40) {
+    rows_to_show = 50
+  }
+
+  var initComplete = function(oSettings) {
+    if (oSettings.aoColumns.length > 30) {
+      // Remove search box if there are so many columns the ajax request
+      // would cause a 414 Request URI Too Large error on wide datasets
+      $('#' + wrapper_id + ' .input-append').empty()
+
+    } else {
+      // Otherwise, append search box and handle clicks / enter key
+      var $btn = $('<button class="btn">Search</button>')
+      $btn.on('click', function() {
+        searchTerm = $(this).prev().val()
+        window.currentTable.fnFilter(searchTerm)
+      })
+
+      var $input = $('<input type="search" class="input-medium search-query">')
+      $input.on('keypress', function(e) {
+        if (e.which === 13) {
+          $(this).next().trigger('click')
+        }
+      })
+
+      if (oSettings.oLoadedState != null) {
+        $input.val(oSettings.oLoadedState.oSearch.sSearch)
+      }
+
+      $('#' + wrapper_id + ' .input-append').html($input).append($btn)
+    }
+  }
+
+  // Fill in the datatables object
+  window.currentTable = $table.dataTable({
+    "bProcessing": true,
+    "bServerSide": true,
+    "bDeferRender": true,
+    "bPaginate": true,
+    "bFilter": true,
+    "iDisplayLength": rows_to_show,
+    "bScrollCollapse": true,
+    "sDom": 'r<"table_controls"p<"form-search"<"input-append">>i><"table_wrapper"t>',
+    "sPaginationType": "bootstrap",
+    "fnServerData": convertData(table_name, column_names),
+    "fnInitComplete": initComplete,
+    "bStateSave": true,
+    "fnStateSave": saveState,
+    "fnStateLoad": loadState,
+    "oLanguage": {
+      "sEmptyTable": "This table is empty"
+     }
+  })
 }
 
 // Create and insert spreadsheet-like tab bar at top of page.
@@ -396,6 +426,7 @@ var constructTabs = function(active_table) {
     var $a = $('<a>').appendTo($li)
 
     if (type == 'grid') {
+      $a.attr('href', '#' + table_name)
       if ('title' in window.meta.grid[table_name]) {
         $a.text(window.meta.grid[table_name]['title'])
       } else {
@@ -497,10 +528,11 @@ var toggleDevTables = function() {
 }
 
 // Main entry point
-var settings
+var allSettings // stores the sql.meta output
+var settings // stores user settings like selected table etc
 var sqliteEndpoint
-var tables
-var grids
+var tables // list of table names
+var grids // list of grid names
 var currentActiveTable
 var currentActiveTableIndex
 var currentActiveTableType
@@ -511,7 +543,7 @@ $(function() {
   window.sqliteEndpoint = window.settings.target.url + '/sqlite'
 
   var fetchSQLMeta = function (cb) {
-    scraperwiki.sql.meta(function(newMeta) {
+    scraperwiki.sql.meta().done(function(newMeta) {
       window.meta = newMeta
       window.tables = filter_and_sort_tables(_.keys(window.meta.table))
 
@@ -521,7 +553,48 @@ $(function() {
       })
 
       cb()
-    }, handle_ajax_error)
+    }).fail(function() {
+      handle_ajax_error(jqXHR, textStatus, errorThrown)
+      cb()
+    })
+  }
+
+
+  var loadAllSettings = function(cb) {
+    var oData = false
+    scraperwiki.exec("touch allSettings.json; cat allSettings.json").done(function(content) {
+      try {
+        window.allSettings = JSON.parse(content)
+      } catch (e) {
+        window.allSettings = { tables: {}, active: null, activeType: null }
+      }
+      cb()
+    }).fail(function() {
+      handle_ajax_error(jqXHR, textStatus, errorThrown)
+      cb()
+    })
+  }
+
+  // Fetch all_grids.html if available
+  var fetchAllGrids = function(cb) {
+    $.get(window.settings.target.url + '/http/grids/all_grids.html').done(function(html) {
+      var $all_grids_wrapper = $('<div class="maintable" id="all_grids">').hide()
+      $all_grids_wrapper.html(html)
+
+      $all_grids_wrapper.find('table').each(function(){
+        $(this).addClass('table table-striped table-bordered innertable display')
+      })
+
+      $('#content').append($all_grids_wrapper)
+      cb()
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      // Ignore 404's, which will be caused in the faily common case
+      // that when there is no all_grids.html file.
+      if (jqXHR.status != 404) {
+        handle_ajax_error(jqXHR, textStatus, errorThrown)
+      }
+      cb()
+    })
   }
 
   var whenLoaded = function (err, results) {
@@ -555,27 +628,38 @@ $(function() {
     }
   }
 
-  async.parallel([fetchSQLMeta, loadAllSettings], whenLoaded)
+  async.parallel([fetchSQLMeta, loadAllSettings, fetchAllGrids], whenLoaded)
 
-  $(document).on('click', '#table-sidebar li a', function() {
+  $(document).on('click', '#table-sidebar li a', function(e) {
+    e.preventDefault()
     var $a = $(this)
     var $li = $a.parent()
-    var $nav = $('nav')
+    var $nav = $('#table-sidebar')
+
+    console.log('#table-sidebar CLICK', $a.text(), $a)
 
     $nav.find('li.active').removeClass('active')
     $li.addClass('active')
-
-    console.log("Setting currentActiveTable", $a)
 
     window.currentActiveTable = $a.attr('data-table-name')
     window.currentActiveTableIndex = $a.attr('data-table-index')
     window.currentActiveTableType = $a.attr('data-table-type')
 
-    constructDataTable(window.currentActiveTableType,
-                       window.currentActiveTableIndex,
-                       window.currentActiveTable)
+    showTableOrGrid(window.currentActiveTableType,
+                    window.currentActiveTableIndex,
+                    window.currentActiveTable)
   })
 
   $(document).on('click', '#developer-tables .nav-header', toggleDevTables)
+
+  $(document).on('activate', function(e){
+    var $nav = $('#table-sidebar')
+    var $li = $(e.target)
+    var target_y = $li.position().top
+    target_y += $nav.scrollTop()
+    target_y -= $nav.height() / 2
+    target_y += $li.height() / 2
+    $nav.scrollTop(target_y - 20)
+  })
 
 });

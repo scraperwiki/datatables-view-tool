@@ -13,6 +13,7 @@ html, body {
   top: 0;
   left: 0;
   bottom: 0;
+  z-index: 100;
   padding: 0;
   margin: 0;
   -webkit-border-radius: 0;
@@ -63,6 +64,10 @@ html, body {
   left: 200px;
 }
 
+#content {
+  overflow: auto; /* adds scroll bars for long or wide tables/grids */
+}
+
 .dataTables_processing {
   position: fixed;
   z-index: 9000;
@@ -101,6 +106,26 @@ div.problem {
   -webkit-border-radius: 4px;
   -moz-border-radius: 4px;
   border-radius: 4px;
+}
+
+#all_grids,
+.maintable[id^="grid_"] {
+  padding: 20px;
+  background: #C2CDDA;
+  min-height: 100%;
+}
+
+#all_grids table,
+.maintable[id^="grid_"] table {
+  background-color: #fff;
+  -webkit-box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  -moz-box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  border: none;
+}
+
+#all_grids table {
+  margin-bottom: 40px;
 }
 
 
