@@ -412,7 +412,7 @@ var constructTabs = function(active_table) {
     return $li
   }
 
-  var populateTabs = function(tables, heading_name) {
+  var populateTabs = function(tables, type, heading_name) {
     if (tables.length == 0) {
       return $([])
     }
@@ -424,8 +424,13 @@ var constructTabs = function(active_table) {
     $ul.append('<li class="nav-header">' + subtitle + '</li>')
 
     $.each(tables, function(i, table_name) {
-      var i = window.tables.indexOf(table_name)
-      var tab = constructTab('table', i, table_name, active_table)
+      var i = 0
+      if (type == "grid") {
+        i = window.grids.indexOf(table_name)
+      } else {
+        i = window.tables.indexOf(table_name)
+      }
+      var tab = constructTab(type, i, table_name, active_table)
       $ul.append(tab)
     })
 
@@ -433,27 +438,27 @@ var constructTabs = function(active_table) {
   }
 
   var publicTables = _.filter(window.tables, isPublicTable)
-  populateTabs(publicTables, 'Table')
+  populateTabs(publicTables, 'table', 'Table')
 
-  populateTabs(window.grids, 'Unstructured table')
+  populateTabs(window.grids, 'grid', 'Unstructured table')
 
   var devTables = _.filter(window.tables, isDevTable)
-  var devUl = populateTabs(devTables, 'Developer table')
+  var devUl = populateTabs(devTables, 'table', 'Developer table')
   devUl.attr('id', 'developer-tables')
-  devUl.find('li').addClass('developer')
+  devUl.find('li:not(.nav-header)').addClass('developer')
 }
 
 // Short functions to weed out non-user-facing tables
 var isHiddenTable = function(table_name) {
-  return table_name.slice(0,2) == '__'
+  return table_name.slice(0, 2) == '__'
 }
 
 var isDevTable = function(table_name) {
-  return table_name.slice(0,1) == '_' && !isHiddenTable(table_name)
+  return table_name.slice(0, 1) == '_' && !isHiddenTable(table_name)
 }
 
 var isPublicTable = function(table_name) {
-  return table_name.slice(0,1) != '_'
+  return table_name.slice(0, 1) != '_'
 }
 
 // Make all the DataTables and their tabs
@@ -476,13 +481,6 @@ var constructDataTables = function(first_table_name) {
   if (isDevTable(first_table_name)) {
     toggleDevTables()
   }
-
-  // Activate one of the sidebar tables (This is really hacky)
-  // These global variables are set in constructTab
-  $('a[data-table-index="' + window.currentActiveTableIndex + '"]'+
-     '[data-table-type="' + window.currentActiveTableType + '"]'+
-     '[data-table-name="' + window.currentActiveTable + '"]')
-  .trigger('click')
 }
 
 // Get table names in the right order, ready for display
@@ -495,7 +493,7 @@ var filter_and_sort_tables = function(messy_table_names) {
 }
 
 var toggleDevTables = function() {
-    $('#developer-tables').nextAll().toggle()
+    $('#developer-tables .nav-header').nextAll().toggle()
 }
 
 // Main entry point
@@ -541,6 +539,13 @@ $(function() {
 
         constructDataTables(window.currentActiveTable)
 
+        // Activate one of the sidebar tables (This is really hacky)
+        // These global variables are set in constructTab
+        $('a[data-table-index="' + window.currentActiveTableIndex + '"]'+
+           '[data-table-type="' + window.currentActiveTableType + '"]'+
+           '[data-table-name="' + window.currentActiveTable + '"]')
+        .trigger('click')
+
     } else {
       $('#table-sidebar-loading').text('No tables')
       $('#content').html(
@@ -555,7 +560,12 @@ $(function() {
   $(document).on('click', '#table-sidebar li a', function() {
     var $a = $(this)
     var $li = $a.parent()
-    $li.addClass('active').siblings('.active').removeClass('active')
+    var $nav = $('nav')
+
+    $nav.find('li.active').removeClass('active')
+    $li.addClass('active')
+
+    console.log("Setting currentActiveTable", $a)
 
     window.currentActiveTable = $a.attr('data-table-name')
     window.currentActiveTableIndex = $a.attr('data-table-index')
@@ -566,6 +576,6 @@ $(function() {
                        window.currentActiveTable)
   })
 
-  $(document).on('click', '#developer-tables', toggleDevTables)
+  $(document).on('click', '#developer-tables .nav-header', toggleDevTables)
 
 });
