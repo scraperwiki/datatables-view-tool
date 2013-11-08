@@ -662,12 +662,31 @@ $(function() {
   // a new sidebar tab because a user has scrolled in #content
   $(document).on('activate', function(e){
     var $nav = $('#table-sidebar')
+
+    if($nav.is(':hover')){
+      return // Don't want to move links under the user's cursor!
+    }
+
     var $li = $(e.target)
     var target_y = $li.position().top
     target_y += $nav.scrollTop()
     target_y -= $nav.height() / 2
     target_y += $li.height() / 2
     $nav.scrollTop(target_y - 20)
+  })
+
+  $('#table-sidebar').on('mouseleave', function(){
+    var $nav = $(this)
+    var $li = $('.active', $nav)
+    var target_y = $li.position().top
+    target_y += $nav.scrollTop()
+    target_y -= $nav.height() / 2
+    target_y += $li.height() / 2
+    window.sidebarScrollTimeout = setTimeout(function(){
+      $nav.animate({ scrollTop: target_y - 20 }, 500)
+    }, 1000)
+  }).on('mouseenter', function(){
+    clearTimeout(window.sidebarScrollTimeout)
   })
 
 });
