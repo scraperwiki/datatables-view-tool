@@ -239,11 +239,12 @@ var showTableOrGrid = function(table_type, table_index, table_name) {
   if (table_type == 'grid' && $('#all_grids').length) {
     hidePreviousTable()
     $('#all_grids').show()
+    $('#content').scrollspy('refresh')
 
     var table_y = $('#all_grids #' + table_name).position().top
-    var all_tables_padding = parseInt($('#all_grids').css('padding-top'))
-    $('#content').scrollTop(table_y - all_tables_padding)
-    $('#content').scrollspy({ offset: all_tables_padding + 1 })
+    table_y += $('#content').scrollTop()
+    var all_grids_padding = parseInt($('#all_grids').css('padding-top'))
+    $('#content').scrollTop(table_y - all_grids_padding)
 
     return
   }
@@ -586,6 +587,12 @@ $(function() {
       })
 
       $('#content').append($all_grids_wrapper)
+
+      // Listen for scroll events in #content and highlight the
+      // relevant sidebar tab (used only in the all_grids case)
+      var all_grids_padding = parseInt($('#all_grids').css('padding-top'))
+      $('#content').scrollspy({ offset: all_grids_padding + 1 })
+
       cb()
     }).fail(function(jqXHR, textStatus, errorThrown) {
       // Ignore 404's, which will be caused in the faily common case
@@ -630,13 +637,12 @@ $(function() {
 
   async.parallel([fetchSQLMeta, loadAllSettings, fetchAllGrids], whenLoaded)
 
+  // Handle sidebar tab clicks
   $(document).on('click', '#table-sidebar li a', function(e) {
     e.preventDefault()
     var $a = $(this)
     var $li = $a.parent()
     var $nav = $('#table-sidebar')
-
-    console.log('#table-sidebar CLICK', $a.text(), $a)
 
     $nav.find('li.active').removeClass('active')
     $li.addClass('active')
@@ -652,6 +658,8 @@ $(function() {
 
   $(document).on('click', '#developer-tables .nav-header', toggleDevTables)
 
+  // The "activate" event is produced when scrollspy selects
+  // a new sidebar tab because a user has scrolled in #content
   $(document).on('activate', function(e){
     var $nav = $('#table-sidebar')
     var $li = $(e.target)
