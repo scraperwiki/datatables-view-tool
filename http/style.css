@@ -19,7 +19,7 @@ html, body {
   -webkit-border-radius: 0;
   -moz-border-radius: 0;
   border-radius: 0;
-  width: 199px;
+  width: 209px;
   border-left: none;
   border-top: none;
   border-bottom: none;
@@ -61,7 +61,7 @@ html, body {
   top: 0;
   right: 0;
   bottom: 0;
-  left: 200px;
+  left: 210px;
 }
 
 #content {
@@ -82,7 +82,7 @@ html, body {
 body > .alert {
   position: absolute;
   top: 0;
-  left: 200px;
+  left: 210px;
   right: 0;
   z-index: 500;
   margin: 0;
