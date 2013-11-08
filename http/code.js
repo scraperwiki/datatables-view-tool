@@ -526,6 +526,9 @@ var filter_and_sort_tables = function(messy_table_names) {
 
 var toggleDevTables = function() {
     $('#developer-tables .nav-header').nextAll().toggle()
+    // force the sidebar to scroll right to the bottom,
+    // to show the newly unhidden dev tables
+    $('#table-sidebar').scrollTop(99999)
 }
 
 // Main entry point
