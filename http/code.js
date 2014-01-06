@@ -681,13 +681,15 @@ $(function() {
   $('#table-sidebar').on('mouseleave', function(){
     var $nav = $(this)
     var $li = $('.active', $nav)
-    var target_y = $li.position().top
-    target_y += $nav.scrollTop()
-    target_y -= $nav.height() / 2
-    target_y += $li.height() / 2
-    window.sidebarScrollTimeout = setTimeout(function(){
-      $nav.animate({ scrollTop: target_y - 20 }, 500)
-    }, 1000)
+    if($li.length){ // just in case sidebar is empty
+      var target_y = $li.position().top
+      target_y += $nav.scrollTop()
+      target_y -= $nav.height() / 2
+      target_y += $li.height() / 2
+      window.sidebarScrollTimeout = setTimeout(function(){
+        $nav.animate({ scrollTop: target_y - 20 }, 500)
+      }, 1000)
+    }
   }).on('mouseenter', function(){
     clearTimeout(window.sidebarScrollTimeout)
   })
