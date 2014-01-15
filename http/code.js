@@ -516,19 +516,29 @@ var constructDataTables = function(first_table_name) {
 }
 
 // Get table names in the right order, ready for display
-var filter_and_sort_tables = function(messy_table_names) {
+var filterAndSortTables = function(messyTableNames) {
   // Filter out tables starting with double underscore
-  nice_tables = _.reject(messy_table_names, isHiddenTable)
+  var niceTables = _.reject(messyTableNames, isHiddenTable)
   // Put tables beginning with a single underscore at the end
-  return _.reject(nice_tables, isDevTable)
-          .concat(_.filter(nice_tables, isDevTable))
+  var topTables = _.reject(niceTables, isDevTable)
+  var bottomTables = _.filter(niceTables, isDevTable)
+  return topTables.concat(bottomTables)
+}
+
+var filterAndSortGrids = function(unsortedGrids) {
+  var visibleGrids = _.reject(unsortedGrids, function(grid) {
+    return grid.slice(0, 1) == '_'
+  })
+  return _.sortBy(visibleGrids, function(gridChecksum) {
+    return window.meta.grid[gridChecksum]['number']
+  })
 }
 
 var toggleDevTables = function() {
-    $('#developer-tables .nav-header').nextAll().toggle()
-    // force the sidebar to scroll right to the bottom,
-    // to show the newly unhidden dev tables
-    $('#table-sidebar').scrollTop(99999)
+  $('#developer-tables .nav-header').nextAll().toggle()
+  // force the sidebar to scroll right to the bottom,
+  // to show the newly unhidden dev tables
+  $('#table-sidebar').scrollTop(99999)
 }
 
 // Main entry point
@@ -549,13 +559,8 @@ $(function() {
   var fetchSQLMeta = function (cb) {
     scraperwiki.sql.meta().done(function(newMeta) {
       window.meta = newMeta
-      window.tables = filter_and_sort_tables(_.keys(window.meta.table))
-
-      var unsorted_grids = _.keys(window.meta.grid)
-      window.grids = _.sortBy(unsorted_grids, function(grid_checksum) {
-        return window.meta.grid[grid_checksum]['number']
-      })
-
+      window.tables = filterAndSortTables(_.keys(window.meta.table))
+      window.grids = filterAndSortGrids(_.keys(window.meta.grid))
       cb()
     }).fail(function() {
       handle_ajax_error(jqXHR, textStatus, errorThrown)
