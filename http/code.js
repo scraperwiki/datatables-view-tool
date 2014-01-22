@@ -578,7 +578,7 @@ $(function() {
         window.allSettings = { tables: {}, active: null, activeType: null }
       }
       cb()
-    }).fail(function() {
+    }).fail(function(jqXHR, textStatus, errorThrown) {
       handle_ajax_error(jqXHR, textStatus, errorThrown)
       cb()
     })
