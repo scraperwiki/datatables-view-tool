@@ -47,7 +47,10 @@ var prettifyCell = function(content) {
   // convert images to themselves embedded.
   // XXX _normal is to match Twitter images, watch for it causing trouble
   // e.g. https://si0.twimg.com/profile_images/2559953209/pM981LrS_normal - remove it
-  if (content.match(/^((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+(\.jpeg|\.png|\.jpg|\.gif|\.bmp|_normal))$/ig)) {
+  if (content.match(/^((http|https|ftp):\/\/[a-zA-Z0-9-_~#:\.\?%&\/\[\]@\!\$'\(\)\*\+,;=]+(\.jpeg|\.png|\.jpg|\.gif|\.bmp|_normal))$/ig)
+      // This isn't an image, despite the extension: http://en.m.wikipedia.org/wiki/File:Violette_Leduc.jpg
+      && !content.match(/wikipedia.org\/wiki\/File\:/) 
+     ) {
     content = '<img src="' + escaped_content + '" class="inline">'
   }
   // match LinkedIn image URLs, which always have "licdn.com/mpr/mpr" in them.
