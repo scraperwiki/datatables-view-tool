@@ -109,6 +109,9 @@ var loadState = function(oSettings) {
     // Force the display length we calculated was suitable when first
     // making the table (rather than using the saved setting).
     oData.iLength = oSettings._iDisplayLength
+    // Force to first page, as confuses users
+    oData.iStart = 0
+    oData.iEnd = 0
   } else {
     oData = false
   }
